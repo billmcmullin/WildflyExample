@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Number Guess</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="{{ctx}}/static/css/style.css">
+</head>
+
+<body>
+    <h1>Number Guess</h1>
+
+    <p>Guess a number between 1 and 100. You have <strong>{{remaining}}</strong> guesses left.</p>
+    <p>Current candidate range: <strong>[{{low}}, {{high}}]</strong></p>
+
+    <form method="post" action="{{ctx}}/numberguess"> <label>Your guess: <input name="guess" value="{{guess_value}}"
+                autofocus /> </label> <button type="submit">Submit Guess</button> </form>
+
+    <div class="result"> {{message}} </div>
+
+    <section>
+        <h2>Possible Candidates</h2> {{candidates}}
+    </section>
+
+    <section>
+        <h2>History</h2> {{history}}
+    </section>
+
+    <p> <a href="{{ctx}}/numberguess?new=1">Start New Game</a> | <a href="{{ctx}}/home">Back to Home</a> </p>
+</body>
+
+</html>

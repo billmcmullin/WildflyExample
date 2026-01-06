@@ -120,4 +120,60 @@ class HomeServletTest
 
     }
 
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.HomeServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet3() throws Throwable
+    {
+        // Given
+        HomeServlet underTest = new HomeServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = "getContextPathResult"; // UTA: default value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.HomeServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet4() throws Throwable
+    {
+        // Given
+        HomeServlet underTest = new HomeServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
+    }
+
 }

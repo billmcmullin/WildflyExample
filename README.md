@@ -1,5 +1,5 @@
 # WildlfyExample
-Just a wildfly Server example that launches a Home Page with a link to a calculator application.
+Just a wildfly Server example that launches a Home Page with a link to some applications.
 
 More links to other apps can be added.
 
@@ -14,4 +14,11 @@ mvnw clean package
 or:
 ```
 mvnw.cmd clean package
+```
+
+## Access Server
+You can access the server after is deployed:
+
+```
+http://localhost:8080/app
 ```

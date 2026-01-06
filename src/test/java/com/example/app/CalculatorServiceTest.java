@@ -100,4 +100,42 @@ class CalculatorServiceTest {
 
     }
 
+    /**
+     * Parasoft Jtest UTA: Test for calculate(BigDecimal, BigDecimal, String)
+     *
+     * @see com.example.app.CalculatorService#calculate(BigDecimal, BigDecimal, String)
+     * @author bmcmullin
+     */
+    @Test
+    public void testCalculate3() throws Throwable
+    {
+        // When
+        BigDecimal a = BigDecimal.ONE; // UTA: default value
+        BigDecimal b = BigDecimal.ONE; // UTA: default value
+        String op = null; // UTA: configured value
+        assertThrows(IllegalArgumentException.class, () -> {
+            CalculatorService.calculate(a, b, op);
+        });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for calculate(BigDecimal, BigDecimal, String)
+     *
+     * @see com.example.app.CalculatorService#calculate(BigDecimal, BigDecimal, String)
+     * @author bmcmullin
+     */
+    @Test
+    public void testCalculate4() throws Throwable
+    {
+        // When
+        BigDecimal a = BigDecimal.ONE; // UTA: default value
+        BigDecimal b = BigDecimal.ONE; // UTA: default value
+        String op = "op"; // UTA: configured value
+        assertThrows(IllegalArgumentException.class, () -> {
+            CalculatorService.calculate(a, b, op);
+        });
+
+    }
+
 }

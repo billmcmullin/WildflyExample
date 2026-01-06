@@ -262,4 +262,169 @@ class CalculatorUIServletTest
 
     }
 
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.CalculatorUIServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet6() throws Throwable
+    {
+        // Given
+        CalculatorUIServlet underTest = new CalculatorUIServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        String getParameterResult = null; // UTA: configured value
+        String getParameterResult2 = null; // UTA: configured value
+        String getParameterResult3 = "add"; // UTA: configured value
+        when(req2.getParameter(nullable(String.class))).thenReturn(getParameterResult, getParameterResult2, getParameterResult3);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.CalculatorUIServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet7() throws Throwable
+    {
+        // Given
+        CalculatorUIServlet underTest = new CalculatorUIServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = "getContextPathResult"; // UTA: default value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        String getParameterResult = "getParameterResult"; // UTA: default value
+        String getParameterResult2 = "getParameterResult2"; // UTA: default value
+        String getParameterResult3 = null; // UTA: configured value
+        when(req2.getParameter(nullable(String.class))).thenReturn(getParameterResult, getParameterResult2, getParameterResult3);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.CalculatorUIServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet8() throws Throwable
+    {
+        // Given
+        CalculatorUIServlet underTest = new CalculatorUIServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        String getParameterResult = "getParameterResult"; // UTA: default value
+        String getParameterResult2 = "getParameterResult2"; // UTA: default value
+        String getParameterResult3 = null; // UTA: configured value
+        when(req2.getParameter(nullable(String.class))).thenReturn(getParameterResult, getParameterResult2, getParameterResult3);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.CalculatorUIServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet9() throws Throwable
+    {
+        // Given
+        CalculatorUIServlet underTest = new CalculatorUIServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        String getParameterResult = "getParameterResult"; // UTA: default value
+        String getParameterResult2 = null; // UTA: configured value
+        String getParameterResult3 = null; // UTA: configured value
+        when(req2.getParameter(nullable(String.class))).thenReturn(getParameterResult, getParameterResult2, getParameterResult3);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.CalculatorUIServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet10() throws Throwable
+    {
+        // Given
+        CalculatorUIServlet underTest = new CalculatorUIServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        String getParameterResult = null; // UTA: configured value
+        String getParameterResult2 = "getParameterResult2"; // UTA: default value
+        String getParameterResult3 = null; // UTA: configured value
+        when(req2.getParameter(nullable(String.class))).thenReturn(getParameterResult, getParameterResult2, getParameterResult3);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
+    }
+
 }
