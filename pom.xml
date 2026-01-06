@@ -6,12 +6,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.example</groupId>
-  <artifactId>calculator</artifactId>
+  <artifactId>app</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>war</packaging>
 
-  <name>Simple Calculator Webapp (JSON API)</name>
-  <description>WildFly-deployable webapp providing a JSON REST API for basic math operations</description>
+  <name>Simple Webapp (JSON API)</name>
+  <description>WildFly-deployable webapp providing a JSON REST API for basic operations</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
