@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Calculator</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 720px;
+            margin: 24px;
+        }
+
+        label,
+        input,
+        select,
+        button {
+            display: block;
+            margin: 8px 0
+        }
+
+        .result {
+            margin-top: 12px;
+            padding: 8px;
+            background: #f6f6f6;
+            border: 1px solid #ddd
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Calculator</h1>
+    <form method="get" action="{{ctx}}/calculator"> <label>A: <input name="a" value="{{a}}" /></label> <label>B: <input
+                name="b" value="{{b}}" /></label> <label>Operation: <select name="op">
+                <option value="add" {{op_add}}>add</option>
+                <option value="sub" {{op_sub}}>sub</option>
+                <option value="mul" {{op_mul}}>mul</option>
+                <option value="div" {{op_div}}>div</option>
+            </select> </label> <button type="submit">Calculate</button> </form>
+
+    {{result_block}}
+
+    <p><a href="{{ctx}}/home">Back to Home</a></p>
+</body>
+
+</html>
