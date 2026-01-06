@@ -29,6 +29,9 @@ class HomeServletTest {
         sw = new StringWriter();
         pw = new PrintWriter(sw);
         when(resp.getWriter()).thenReturn(pw);
+
+        // Mock the context path used by the servlet to build URLs
+        when(req.getContextPath()).thenReturn("/app");
     }
 
     @Test
@@ -37,7 +40,8 @@ class HomeServletTest {
         pw.flush();
         String out = sw.toString();
         assertTrue(out.contains("Welcome to App"));
-        assertTrue(out.contains("/calculator"));
+        // Now check for the context-aware calculator link
+        assertTrue(out.contains("/app/calculator"));
         verify(resp).setContentType("text/html;charset=UTF-8");
     }
 

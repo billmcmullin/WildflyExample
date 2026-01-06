@@ -9,11 +9,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "HomeServlet", urlPatterns = {"/home"})
-public class HomeServlet extends HttpServlet {
+@WebServlet(name = "HomeServlet", urlPatterns= {"/home"}) public class HomeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String ctx = req.getContextPath(); // will be "/app"
         resp.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = resp.getWriter()) {
             out.println("<!doctype html>");
@@ -24,12 +24,13 @@ public class HomeServlet extends HttpServlet {
             out.println("</head><body>");
             out.println("<h1>Welcome to App</h1>");
             out.println("<p>This is the hub page. Use the link below to open the calculator:</p>");
-            out.println("<nav><a href=\"/calculator\">Open Calculator</a></nav>");
+            out.println("<nav><a href=\"" + ctx + "/calculator\">Open Calculator</a></nav>");
             out.println("<hr><section><h2>Quick links</h2><ul>");
-            out.println("<li><a href=\"/calculator\">Calculator</a></li>");
-            out.println("<li><a href=\"/api/calc\">Raw Calculator API (GET example)</a> — try <code>?a=2&b=3&op=add</code></li>");
+            out.println("<li><a href=\"" + ctx + "/calculator\">Calculator</a></li>");
+            out.println("<li><a href=\"" + ctx + "/api/calc\">Raw Calculator API (GET example)</a> — try <code>?a=2&b=3&op=add</code></li>");
             out.println("</ul></section>");
             out.println("</body></html>");
         }
     }
+
 }

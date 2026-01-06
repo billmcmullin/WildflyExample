@@ -10,12 +10,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "CalculatorUIServlet", urlPatterns = {"/calculator"})
-public class CalculatorUIServlet extends HttpServlet {
+@WebServlet(name = "CalculatorUIServlet", urlPatterns = {"/calculator"}) public class CalculatorUIServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // If query params present, compute and show result; otherwise show empty form
         String a = req.getParameter("a");
         String b = req.getParameter("b");
         String op = req.getParameter("op");
@@ -37,6 +35,7 @@ public class CalculatorUIServlet extends HttpServlet {
             }
         }
 
+        String ctx = req.getContextPath(); // "/app"
         resp.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = resp.getWriter()) {
             out.println("<!doctype html>");
@@ -46,7 +45,7 @@ public class CalculatorUIServlet extends HttpServlet {
             out.println("<style>body{font-family:Arial, sans-serif;max-width:720px;margin:24px;}label,input,select,button{display:block;margin:8px 0}.result{margin-top:12px;padding:8px;background:#f6f6f6;border:1px solid #ddd}</style>");
             out.println("</head><body>");
             out.println("<h1>Calculator</h1>");
-            out.println("<form method=\"get\" action=\"/calculator\">");
+            out.println("<form method=\"get\" action=\"" + ctx + "/calculator\">");
             out.printf("<label>A: <input name=\"a\" value=\"%s\"/></label>%n", a != null ? escapeHtml(a) : "2");
             out.printf("<label>B: <input name=\"b\" value=\"%s\"/></label>%n", b != null ? escapeHtml(b) : "3");
             out.println("<label>Operation: <select name=\"op\">");
@@ -64,15 +63,17 @@ public class CalculatorUIServlet extends HttpServlet {
                 out.printf("<div class=\"result\">Result: %s</div>%n", escapeHtml(result));
             }
 
-            out.println("<p><a href=\"/home\">Back to Home</a></p>");
+            out.println("<p><a href=\"" + ctx + "/home\">Back to Home</a></p>");
             out.println("</body></html>");
         }
     }
 
-    // Simple HTML escaper
     private String escapeHtml(String s) {
-        if (s == null) return "";
+        if (s == null) {
+            return "";
+        }
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 .replace("\"", "&quot;").replace("'", "&#39;");
     }
+
 }
