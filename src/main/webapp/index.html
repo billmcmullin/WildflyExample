@@ -1,0 +1,67 @@
+<!doctype html> 
+<html> 
+  <head> 
+    <meta charset="utf-8"> 
+    <title>Calculator (JSON API)</title> 
+    <meta name="viewport" content="width=device-width,initial-scale=1" /> 
+    <style> body { font-family: Arial, sans-serif; margin: 2rem; max-width: 640px; } label, select, input { margin: .25rem 0; display:block; width:100%; box-sizing:border-box; padding:.5rem; } .row { margin-bottom: .75rem; } button { padding: .5rem 1rem; } .result { margin-top: 1rem; font-weight: bold; } .error { color: red; margin-top: 1rem; } </style> 
+  </head> 
+  <body> 
+    <h1>Calculator (JSON API)</h1>
+    <div> 
+      <label>Number A: <input type="text" id="a" placeholder="e.g. 12.5" /> </label> 
+      <label>Number B: <input type="text" id="b" placeholder="e.g. 3" /> </label> 
+      <label>Operation: <select id="op"> 
+        <option value="add">Add (+)</option> 
+        <option value="sub">Subtract (-)</option> 
+        <option value="mul">Multiply (×)</option> 
+        <option value="div">Divide (÷)</option> </select> 
+      </label> 
+      <div> 
+        <button id="calc">Calculate</button> 
+      </div>
+      <div id="out" class="result" aria-live="polite"></div>
+      <div id="err" class="error" aria-live="polite"></div>
+    </div>
+    <script> const calcBtn = document.getElementById('calc'); const out = document.getElementById('out'); const err = document.getElementById('err');
+    async function calculate() {
+      out.textContent = '';
+      err.textContent = ''; 
+
+      const a = document.getElementById('a').value;
+      const b = document.getElementById('b').value;
+      const op = document.getElementById('op').value;
+
+      const payload = { a, b, op };
+
+      try {
+        const resp = await fetch('api/calc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const json = await resp.json();
+
+        if (json.success) {
+          out.textContent = 'Result: ' + json.result;
+        } else {  
+          err.textContent = 'Error: ' + (json.error || 'Unknown error');
+        }
+      } catch (e) {
+          err.textContent = 'Network or server error';
+        }
+      }
+
+  calcBtn.addEventListener('click', calculate);
+    // allow Enter to submit
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        calculate();
+      }
+    });
+
+  </script> 
+  </body> 
+</html>
