@@ -2,10 +2,10 @@ package com.example.app;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 class CalculatorServiceTest {
 
     @Test
@@ -60,6 +60,44 @@ class CalculatorServiceTest {
         BigDecimal a = BigDecimal.ONE;
         BigDecimal b = BigDecimal.ONE;
         assertThrows(IllegalArgumentException.class, () -> CalculatorService.calculate(a, b, null));
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for calculate(BigDecimal, BigDecimal, String)
+     *
+     * @see com.example.app.CalculatorService#calculate(BigDecimal, BigDecimal, String)
+     * @author bmcmullin
+     */
+    @Test
+    public void testCalculate() throws Throwable
+    {
+        // When
+        BigDecimal a = BigDecimal.ONE; // UTA: default value
+        BigDecimal b = BigDecimal.ONE; // UTA: default value
+        String op = null; // UTA: configured value
+        assertThrows(IllegalArgumentException.class, () -> {
+            CalculatorService.calculate(a, b, op);
+        });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for calculate(BigDecimal, BigDecimal, String)
+     *
+     * @see com.example.app.CalculatorService#calculate(BigDecimal, BigDecimal, String)
+     * @author bmcmullin
+     */
+    @Test
+    public void testCalculate2() throws Throwable
+    {
+        // When
+        BigDecimal a = BigDecimal.ONE; // UTA: default value
+        BigDecimal b = BigDecimal.ONE; // UTA: default value
+        String op = "op"; // UTA: configured value
+        assertThrows(IllegalArgumentException.class, () -> {
+            CalculatorService.calculate(a, b, op);
+        });
+
     }
 
 }

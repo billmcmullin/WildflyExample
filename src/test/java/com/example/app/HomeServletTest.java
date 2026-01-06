@@ -1,22 +1,28 @@
 package com.example.app;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-class HomeServletTest {
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+class HomeServletTest
+{
 
     private HomeServlet servlet;
     private HttpServletRequest req;
@@ -26,7 +32,8 @@ class HomeServletTest {
     private PrintWriter pw;
 
     @BeforeEach
-    void setup() throws Exception {
+    void setup() throws Exception
+    {
         servlet = new HomeServlet();
         req = mock(HttpServletRequest.class);
         resp = mock(HttpServletResponse.class);
@@ -47,13 +54,70 @@ class HomeServletTest {
     }
 
     @Test
-    void doGetContainsCalculatorLink() throws Exception {
+    void doGetContainsCalculatorLink() throws Exception
+    {
         servlet.doGet(req, resp);
         pw.flush();
         String out = sw.toString();
         assertTrue(out.contains("Welcome to App"));
         assertTrue(out.contains("/app/calculator"));
         verify(resp).setContentType("text/html;charset=UTF-8");
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.HomeServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet() throws Throwable
+    {
+        // Given
+        HomeServlet underTest = new HomeServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = "getContextPathResult"; // UTA: default value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.example.app.HomeServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    public void testDoGet2() throws Throwable
+    {
+        // Given
+        HomeServlet underTest = new HomeServlet();
+
+        // When
+        HttpServletRequest req2 = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req2.getContextPath()).thenReturn(getContextPathResult);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req2.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp2 = mock(HttpServletResponse.class);
+        assertThrows(IOException.class, () -> {
+            underTest.doGet(req2, resp2);
+        });
+
     }
 
 }

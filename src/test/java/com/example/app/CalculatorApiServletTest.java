@@ -5,18 +5,20 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import jakarta.json.Json;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-class CalculatorApiServletTest {
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+class CalculatorApiServletTest
+{
 
     private CalculatorApiServlet servlet;
     private HttpServletRequest req;
@@ -25,7 +27,8 @@ class CalculatorApiServletTest {
     private PrintWriter pw;
 
     @BeforeEach
-    void setup() throws Exception {
+    void setup() throws Exception
+    {
         servlet = new CalculatorApiServlet();
         req = mock(HttpServletRequest.class);
         resp = mock(HttpServletResponse.class);
@@ -35,7 +38,8 @@ class CalculatorApiServletTest {
     }
 
     @Test
-    void doGetSuccess() throws Exception {
+    void doGetSuccess() throws Exception
+    {
         when(req.getParameter("a")).thenReturn("2");
         when(req.getParameter("b")).thenReturn("3");
         when(req.getParameter("op")).thenReturn("add");
@@ -50,13 +54,9 @@ class CalculatorApiServletTest {
     }
 
     @Test
-    void doPostJsonSuccess() throws Exception {
-        String json = Json.createObjectBuilder()
-                .add("a", "10")
-                .add("b", "4")
-                .add("op", "div")
-                .build()
-                .toString();
+    void doPostJsonSuccess() throws Exception
+    {
+        String json = Json.createObjectBuilder().add("a", "10").add("b", "4").add("op", "div").build().toString();
 
         when(req.getContentType()).thenReturn("application/json");
         when(req.getReader()).thenReturn(new BufferedReader(new StringReader(json)));
@@ -71,7 +71,8 @@ class CalculatorApiServletTest {
     }
 
     @Test
-    void doPostInvalidJson() throws Exception {
+    void doPostInvalidJson() throws Exception
+    {
         String bad = "{ this is : not json }";
         when(req.getContentType()).thenReturn("application/json");
         when(req.getReader()).thenReturn(new BufferedReader(new StringReader(bad)));
@@ -86,7 +87,8 @@ class CalculatorApiServletTest {
     }
 
     @Test
-    void doGetMissingOp() throws Exception {
+    void doGetMissingOp() throws Exception
+    {
         when(req.getParameter("a")).thenReturn("1");
         when(req.getParameter("b")).thenReturn("2");
         when(req.getParameter("op")).thenReturn(null);
@@ -101,7 +103,8 @@ class CalculatorApiServletTest {
     }
 
     @Test
-    void doGetInvalidNumber() throws Exception {
+    void doGetInvalidNumber() throws Exception
+    {
         when(req.getParameter("a")).thenReturn("notanumber");
         when(req.getParameter("b")).thenReturn("2");
         when(req.getParameter("op")).thenReturn("add");

@@ -5,31 +5,10 @@
     <meta charset="utf-8" />
     <title>Calculator</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 720px;
-            margin: 24px;
-        }
-
-        label,
-        input,
-        select,
-        button {
-            display: block;
-            margin: 8px 0
-        }
-
-        .result {
-            margin-top: 12px;
-            padding: 8px;
-            background: #f6f6f6;
-            border: 1px solid #ddd
-        }
-    </style>
+    <link rel="stylesheet" href="{{ctx}}/static/css/style.css">
 </head>
 
-<body>
+<body class="calculator-container">
     <h1>Calculator</h1>
     <form method="get" action="{{ctx}}/calculator"> <label>A: <input name="a" value="{{a}}" /></label> <label>B: <input
                 name="b" value="{{b}}" /></label> <label>Operation: <select name="op">

@@ -1,0 +1,37 @@
+/* src/main/webapp/static/css/style.css */
+body {
+    font-family: Arial, sans-serif;
+    max-width: 960px;
+    margin: 24px;
+}
+
+nav a {
+    display: inline-block;
+    margin-right: 12px;
+    padding: 8px 12px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #111;
+}
+
+/* calculator page specifics */
+.calculator-container {
+    max-width: 720px;
+    margin: 24px;
+}
+
+label,
+input,
+select,
+button {
+    display: block;
+    margin: 8px 0;
+}
+
+.result {
+    margin-top: 12px;
+    padding: 8px;
+    background: #f6f6f6;
+    border: 1px solid #ddd;
+}
