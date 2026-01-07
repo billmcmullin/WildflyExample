@@ -1,10 +1,12 @@
-package com.example.app;
+package com.example.app.util;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.sql.DataSource;
+
+import com.example.app.dao.UserDao;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

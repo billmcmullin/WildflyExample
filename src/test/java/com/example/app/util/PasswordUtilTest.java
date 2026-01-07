@@ -1,4 +1,4 @@
-package com.example.app;
+package com.example.app.util;
 
 import org.junit.jupiter.api.Test;
 
@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Parasoft Jtest UTA: Test class for PasswordUtil
  *
- * @see com.example.app.PasswordUtil
+ * @see com.example.app.util.PasswordUtil
  * @author bmcmullin
  */
 public class PasswordUtilTest
@@ -16,7 +16,7 @@ public class PasswordUtilTest
     /**
      * Parasoft Jtest UTA: Test for hashPassword(String)
      *
-     * @see com.example.app.PasswordUtil#hashPassword(String)
+     * @see com.example.app.util.PasswordUtil#hashPassword(String)
      * @author bmcmullin
      */
     @Test
@@ -34,7 +34,7 @@ public class PasswordUtilTest
     /**
      * Parasoft Jtest UTA: Test for verify(String, String)
      *
-     * @see com.example.app.PasswordUtil#verify(String, String)
+     * @see com.example.app.util.PasswordUtil#verify(String, String)
      * @author bmcmullin
      */
     @Test

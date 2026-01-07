@@ -1,4 +1,4 @@
-package com.example.app;
+package com.example.app.util;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 /**
  * Parasoft Jtest UTA: Test class for LogoutServlet
  *
- * @see com.example.app.LogoutServlet
+ * @see com.example.app.util.LogoutServlet
  * @author bmcmullin
  */
 public class LogoutServletTest
@@ -24,7 +24,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -51,7 +51,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -80,7 +80,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -104,7 +104,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -133,7 +133,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -162,7 +162,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -191,7 +191,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -220,7 +220,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -241,7 +241,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -262,7 +262,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -292,7 +292,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -318,7 +318,7 @@ public class LogoutServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test

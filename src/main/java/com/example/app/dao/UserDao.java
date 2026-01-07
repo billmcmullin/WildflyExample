@@ -1,4 +1,4 @@
-package com.example.app;
+package com.example.app.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -1,4 +1,4 @@
-package com.example.app;
+package com.example.app.admin;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 /**
  * Parasoft Jtest UTA: Test class for CreateUserServlet
  *
- * @see com.example.app.CreateUserServlet
+ * @see com.example.app.admin.CreateUserServlet
  * @author bmcmullin
  */
 public class CreateUserServletTest
@@ -31,7 +31,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -55,7 +55,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -81,7 +81,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -111,7 +111,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -142,7 +142,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -166,7 +166,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -192,7 +192,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -231,7 +231,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -270,7 +270,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -309,7 +309,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test
@@ -339,7 +339,7 @@ public class CreateUserServletTest
     /**
      * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
      *
-     * @see com.example.app.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @see com.example.app.admin.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      * @author bmcmullin
      */
     @Test

@@ -1,4 +1,4 @@
-package com.example.app;
+package com.example.app.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;

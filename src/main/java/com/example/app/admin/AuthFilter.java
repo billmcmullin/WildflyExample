@@ -1,10 +1,12 @@
-package com.example.app;
+package com.example.app.admin;
 
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import javax.sql.DataSource;
+
+import com.example.app.dao.UserDao;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
