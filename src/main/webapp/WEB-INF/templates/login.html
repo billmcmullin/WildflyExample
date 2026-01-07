@@ -6,25 +6,6 @@
     <title>Login</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="stylesheet" href="{{ctx}}/static/css/style.css">
-    <style>
-        /* page-centering for the login form; small inline fallback if CSS not present */
-        .login-wrap {
-            max-width: 420px;
-            margin: 48px auto;
-            padding: 24px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: #fff;
-        }
-
-        label,
-        input,
-        button {
-            display: block;
-            width: 100%;
-            margin: 8px 0;
-        }
-    </style>
 </head>
 
 <body>
@@ -32,9 +13,18 @@
         <div class="login-wrap">
             <h1>Sign in</h1>
             <div class="result">{{message}}</div>
-            <form method="post" action="{{ctx}}/login"> <input type="hidden" name="redirect" value="{{redirect}}" />
-                <label>Username <input name="username" autofocus /> </label> <label>Password <input name="password"
-                        type="password" /> </label> <button type="submit">Sign in</button>
+            <form method="post" action="{{ctx}}/login">
+                <input type="hidden" name="redirect" value="{{redirect}}" />
+                <label>Username
+                    <input name="username" autofocus />
+                </label>
+                <label>Password
+                    <input name="password" type="password" />
+                </label>
+                <label style="display:flex; align-items:center;">
+                    <input name="remember" type="checkbox" style="width:auto; margin-right:8px;" /> Remember me
+                </label>
+                <button type="submit">Sign in</button>
             </form>
         </div>
     </div>

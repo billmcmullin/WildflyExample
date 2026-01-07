@@ -1,6 +1,8 @@
 package com.example.app;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,12 +10,23 @@ import javax.sql.DataSource;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "LoginServlet", urlPatterns = {"/login"}) public class LoginServlet extends HttpServlet {
+@WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
+public class LoginServlet extends HttpServlet {
+
+    private static final int SESSION_TIMEOUT_SECONDS = 30 * 60; // 30 minutes
+    private static final int REMEMBER_DAYS = 7; // remember-me token valid for 7 days
+
+    private static final SecureRandom secureRandom = new SecureRandom();
+
+    private String generateToken() {
+        return new BigInteger(160, secureRandom).toString(32);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -38,6 +51,7 @@ import jakarta.servlet.http.HttpSession;
         String user = req.getParameter("username");
         String pass = req.getParameter("password");
         String redirect = req.getParameter("redirect");
+        String remember = req.getParameter("remember"); // "on" if checked
 
         DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
         try {
@@ -46,6 +60,22 @@ import jakarta.servlet.http.HttpSession;
             if (storedHash != null && PasswordUtil.verify(pass, storedHash)) {
                 HttpSession session = req.getSession(true);
                 session.setAttribute("user", user);
+                session.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
+
+                // if remember checked -> create token
+                if ("on".equalsIgnoreCase(remember)) {
+                    String token = generateToken();
+                    long expiry = System.currentTimeMillis() + REMEMBER_DAYS * 24L * 3600L * 1000L;
+                    dao.createRememberToken(token, user, expiry);
+
+                    Cookie cookie = new Cookie("remember", token);
+                    cookie.setHttpOnly(true);
+                    cookie.setPath(req.getContextPath().isEmpty() ? "/" : req.getContextPath());
+                    cookie.setMaxAge((int) (expiry - System.currentTimeMillis()) / 1000);
+                    // cookie.setSecure(true); // enable when using HTTPS
+                    resp.addCookie(cookie);
+                }
+
                 // redirect to requested resource if present
                 if (redirect != null && !redirect.isBlank()) {
                     resp.sendRedirect(redirect);
@@ -67,5 +97,4 @@ import jakarta.servlet.http.HttpSession;
             throw new ServletException(e);
         }
     }
-
 }

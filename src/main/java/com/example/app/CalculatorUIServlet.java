@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,7 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "CalculatorUIServlet", urlPatterns = {"/calculator"}) public class CalculatorUIServlet extends HttpServlet {
+@WebServlet(name = "CalculatorUIServlet", urlPatterns = {"/calculator"})
+public class CalculatorUIServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -50,9 +53,28 @@ import jakarta.servlet.http.HttpSession;
             }
         }
 
+        // Determine admin link if the user is an ADMIN
+        String adminLink = "";
+        if (!user.isEmpty()) {
+            try {
+                DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
+                if (ds != null) {
+                    UserDao dao = new UserDao(ds);
+                    String role = dao.findRoleByUsername(user);
+                    if ("ADMIN".equalsIgnoreCase(role)) {
+                        adminLink = "<a href=\"" + req.getContextPath() + "/admin/users\">Manage Users</a>";
+                    }
+                }
+            } catch (Exception ignored) {
+                // ignore and do not show admin link
+            }
+        }
+
         Map<String, String> vals = new HashMap<>();
         vals.put("ctx", TemplateRenderer.escapeHtml(ctx));
         vals.put("user", TemplateRenderer.escapeHtml(user));
+        vals.put("admin_link", adminLink);
+
         vals.put("a", TemplateRenderer.escapeHtml(a != null ? a : "2"));
         vals.put("b", TemplateRenderer.escapeHtml(b != null ? b : "3"));
 
@@ -75,5 +97,4 @@ import jakarta.servlet.http.HttpSession;
             out.write(html);
         }
     }
-
 }

@@ -13,8 +13,13 @@
         <p class="signed-in">Signed in as: {{user}} — <a href="{{ctx}}/logout">Sign out</a></p>
 
         <h1>Welcome to App</h1>
-        <p>This is the hub page. Use the link below to open the calculator:</p>
-        <nav><a href="{{ctx}}/calculator">Open Calculator</a> <a href="{{ctx}}/numberguess">Number Guess</a></nav>
+        <p>This is the hub page. Use the links below to open other pages:</p>
+
+        <nav>
+            <a href="{{ctx}}/calculator">Calculator</a>
+            <a href="{{ctx}}/numberguess">Number Guess</a>
+            {{admin_link}}
+        </nav>
 
         <hr>
         <section>
@@ -26,6 +31,7 @@
                 </li>
             </ul>
         </section>
+
     </div>
 </body>
 

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Create User</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="{{ctx}}/static/css/style.css">
+</head>
+
+<body>
+    <div class="page-content">
+        <p class="signed-in">Signed in as: {{user}} — <a href="{{ctx}}/logout">Sign out</a></p>
+
+        <h1>Create User</h1>
+        <div class="result">{{message}}</div>
+
+        <form method="post" action="{{ctx}}/admin/users">
+            <label>Username
+                <input name="username" />
+            </label>
+            <label>Password
+                <input name="password" type="password" />
+            </label>
+            <label>Role
+                <select name="role">
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+            </label>
+            <button type="submit">Create User</button>
+        </form>
+
+        <p><a href="{{ctx}}/home">Back to Home</a></p>
+    </div>
+</body>
+
+</html>

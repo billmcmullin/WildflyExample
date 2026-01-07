@@ -12,18 +12,31 @@
     <div class="page-content calculator-container">
         <p class="signed-in">Signed in as: {{user}} — <a href="{{ctx}}/logout">Sign out</a></p>
 
+        <nav>
+            <a href="{{ctx}}/home">Home</a>
+            <a href="{{ctx}}/numberguess">Number Guess</a>
+            {{admin_link}}
+        </nav>
+
         <h1>Calculator</h1>
-        <form method="get" action="{{ctx}}/calculator"> <label>A: <input name="a" value="{{a}}" /></label> <label>B:
-                <input name="b" value="{{b}}" /></label> <label>Operation: <select name="op">
+        <form method="get" action="{{ctx}}/calculator">
+            <label>A: <input name="a" value="{{a}}" /></label>
+            <label>B: <input name="b" value="{{b}}" /></label>
+            <label>Operation:
+                <select name="op">
                     <option value="add" {{op_add}}>add</option>
                     <option value="sub" {{op_sub}}>sub</option>
                     <option value="mul" {{op_mul}}>mul</option>
                     <option value="div" {{op_div}}>div</option>
-                </select> </label> <button type="submit">Calculate</button> </form>
+                </select>
+            </label>
+            <button type="submit">Calculate</button>
+        </form>
 
         {{result_block}}
 
         <p><a href="{{ctx}}/home">Back to Home</a></p>
+
     </div>
 </body>
 

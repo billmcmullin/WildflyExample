@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+import javax.sql.DataSource;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,6 +18,8 @@ import jakarta.servlet.http.HttpSession;
 
 @WebFilter("/*")
 public class AuthFilter implements Filter {
+
+    private static final int SESSION_TIMEOUT_SECONDS = 30 * 60; // must match LoginServlet
 
     @Override
     public void doFilter(ServletRequest sreq, ServletResponse sres, FilterChain chain) throws IOException, ServletException {
@@ -36,6 +40,37 @@ public class AuthFilter implements Filter {
         boolean loggedIn = session != null && session.getAttribute("user") != null;
 
         if (!loggedIn) {
+            // try "remember" cookie
+            String rememberToken = null;
+            if (req.getCookies() != null) {
+                for (jakarta.servlet.http.Cookie c : req.getCookies()) {
+                    if ("remember".equals(c.getName()) && c.getValue() != null && !c.getValue().isBlank()) {
+                        rememberToken = c.getValue();
+                        break;
+                    }
+                }
+            }
+
+            if (rememberToken != null) {
+                try {
+                    DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
+                    if (ds != null) {
+                        UserDao dao = new UserDao(ds);
+                        String username = dao.findUsernameByToken(rememberToken);
+                        if (username != null) {
+                            // auto-login
+                            HttpSession newSession = req.getSession(true);
+                            newSession.setAttribute("user", username);
+                            newSession.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
+                            // optionally refresh token expiry (not done here)
+                            chain.doFilter(sreq, sres);
+                            return;
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
             // redirect to login preserving original URL
             String redirect = uri;
             String target = ctx + "/login?redirect=" + URLEncoder.encode(redirect, StandardCharsets.UTF_8.name());
@@ -45,5 +80,4 @@ public class AuthFilter implements Filter {
 
         chain.doFilter(sreq, sres);
     }
-
 }

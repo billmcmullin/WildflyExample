@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.sql.DataSource;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,7 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "NumberGuessServlet", urlPatterns = {"/numberguess"}) public class NumberGuessServlet extends HttpServlet {
+@WebServlet(name = "NumberGuessServlet", urlPatterns = {"/numberguess"})
+public class NumberGuessServlet extends HttpServlet {
 
     private static final String ATTR_SECRET = "ng.secret";
     private static final String ATTR_LOW = "ng.low";
@@ -80,9 +83,27 @@ import jakarta.servlet.http.HttpSession;
             }
         }
 
+        // Determine admin link if the user is an ADMIN
+        String adminLink = "";
+        if (!user.isEmpty()) {
+            try {
+                DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
+                if (ds != null) {
+                    UserDao dao = new UserDao(ds);
+                    String role = dao.findRoleByUsername(user);
+                    if ("ADMIN".equalsIgnoreCase(role)) {
+                        adminLink = "<a href=\"" + req.getContextPath() + "/admin/users\">Manage Users</a>";
+                    }
+                }
+            } catch (Exception ignored) {
+                // ignore and do not show admin link
+            }
+        }
+
         java.util.Map<String, String> vals = new java.util.HashMap<>();
         vals.put("ctx", TemplateRenderer.escapeHtml(req.getContextPath()));
         vals.put("user", TemplateRenderer.escapeHtml(user));
+        vals.put("admin_link", adminLink);
         vals.put("low", String.valueOf(low));
         vals.put("high", String.valueOf(high));
         vals.put("remaining", String.valueOf(remaining));
@@ -221,5 +242,4 @@ import jakarta.servlet.http.HttpSession;
         session.setAttribute(ATTR_OVER, false);
         session.removeAttribute("ng.lastGuess");
     }
-
 }
