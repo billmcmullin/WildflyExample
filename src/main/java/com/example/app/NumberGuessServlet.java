@@ -70,14 +70,29 @@ import jakarta.servlet.http.HttpSession;
             historyHtml.append("</ul>");
         }
 
+        // Get current user for header
+        String user = "";
+        HttpSession sess = req.getSession(false);
+        if (sess != null) {
+            Object u = sess.getAttribute("user");
+            if (u != null) {
+                user = u.toString();
+            }
+        }
+
         java.util.Map<String, String> vals = new java.util.HashMap<>();
         vals.put("ctx", TemplateRenderer.escapeHtml(req.getContextPath()));
+        vals.put("user", TemplateRenderer.escapeHtml(user));
         vals.put("low", String.valueOf(low));
         vals.put("high", String.valueOf(high));
         vals.put("remaining", String.valueOf(remaining));
         vals.put("message", message != null ? TemplateRenderer.escapeHtml(message) : "");
         vals.put("history", historyHtml.toString());
-        vals.put("guess_value", ""); // blank default
+
+        // Pre-fill last guess if available
+        String last = (String) session.getAttribute("ng.lastGuess");
+        vals.put("guess_value", last != null ? TemplateRenderer.escapeHtml(last) : "");
+
         vals.put("game_over", over ? "true" : "false");
         vals.put("candidates", candidatesHtml);
 

@@ -9,19 +9,24 @@
 </head>
 
 <body>
-    <h1>Welcome to App</h1>
-    <p>This is the hub page. Use the link below to open the calculator:</p>
-    <nav><a href="{{ctx}}/calculator">Open Calculator</a></nav>
-    <nav><a href="{{ctx}}/numberguess">Open game Numberguess</a></nav>
-    <hr>
-    <section>
-        <h2>Quick links</h2>
-        <ul>
-            <li><a href="{{ctx}}/calculator">Calculator</a></li>
-            <li><a href="{{ctx}}/numberguess">Number Guess</a></li>
-            <li><a href="{{ctx}}/api/calc?a=2&b=3&op=add">Raw Calculator API example</a> — try <code>?a=2&b=3&op=add</code></li>
-        </ul>
-    </section>
+    <div class="page-content">
+        <p class="signed-in">Signed in as: {{user}} — <a href="{{ctx}}/logout">Sign out</a></p>
+
+        <h1>Welcome to App</h1>
+        <p>This is the hub page. Use the link below to open the calculator:</p>
+        <nav><a href="{{ctx}}/calculator">Open Calculator</a> <a href="{{ctx}}/numberguess">Number Guess</a></nav>
+
+        <hr>
+        <section>
+            <h2>Quick links</h2>
+            <ul>
+                <li><a href="{{ctx}}/calculator">Calculator</a></li>
+                <li><a href="{{ctx}}/numberguess">Number Guess</a></li>
+                <li><a href="{{ctx}}/api/calc">Raw Calculator API (GET example)</a> — try <code>?a=2&b=3&op=add</code>
+                </li>
+            </ul>
+        </section>
+    </div>
 </body>
 
 </html>

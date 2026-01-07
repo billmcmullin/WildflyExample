@@ -1,37 +1,167 @@
-/* src/main/webapp/static/css/style.css */
-body {
-    font-family: Arial, sans-serif;
-    max-width: 960px;
-    margin: 24px;
-}
+    /* src/main/webapp/static/css/style.css */
 
-nav a {
-    display: inline-block;
-    margin-right: 12px;
-    padding: 8px 12px;
-    background: #f0f0f0;
-    border-radius: 4px;
-    text-decoration: none;
-    color: #111;
-}
+    /* Base page styles */
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #f5f7fa;
+        font-family: Arial, sans-serif;
+        color: #111;
+    }
 
-/* calculator page specifics */
-.calculator-container {
-    max-width: 720px;
-    margin: 24px;
-}
+    /* Main content container for normal pages (home, calculator, etc.) */
+    .page-content {
+        width: 100%;
+        max-width: 960px;
+        margin: 24px auto;
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
 
-label,
-input,
-select,
-button {
-    display: block;
-    margin: 8px 0;
-}
+    /* Navigation links */
+    nav a {
+        display: inline-block;
+        margin-right: 12px;
+        padding: 8px 12px;
+        background: #f0f0f0;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #111;
+    }
 
-.result {
-    margin-top: 12px;
-    padding: 8px;
-    background: #f6f6f6;
-    border: 1px solid #ddd;
-}
+    /* LOGIN: centering wrapper used only by the login page template */
+    .login-page {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 24px;
+        box-sizing: border-box;
+        background: linear-gradient(180deg, #f7f9fc 0%, #f5f7fa 100%);
+    }
+
+    /* Login card */
+    .login-wrap {
+        width: 100%;
+        max-width: 420px;
+        padding: 28px;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        box-sizing: border-box;
+    }
+
+    /* Login form elements */
+    .login-wrap h1 {
+        margin: 0 0 16px 0;
+        font-size: 1.5rem;
+    }
+
+    .login-wrap label,
+    .login-wrap input,
+    .login-wrap button {
+        display: block;
+        width: 100%;
+        margin: 8px 0;
+    }
+
+    .login-wrap input {
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+        background: #fff;
+    }
+
+    .login-wrap button {
+        padding: 10px;
+        border: none;
+        background: #007bff;
+        color: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .login-wrap button:hover {
+        background: #0069e6;
+    }
+
+    .login-wrap .result {
+        margin-bottom: 12px;
+        color: #b00020;
+    }
+
+    /* signed-in status in page header */
+    .signed-in {
+        text-align: right;
+        margin-bottom: 12px;
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .signed-in a {
+        color: #007bff;
+        text-decoration: none;
+        margin-left: 8px;
+    }
+
+    .signed-in a:hover {
+        text-decoration: underline;
+    }
+
+    /* Calculator page specifics */
+    .calculator-container {
+        width: 100%;
+        max-width: 720px;
+        margin: 24px auto;
+        box-sizing: border-box;
+    }
+
+    /* Generic form control styles used across pages */
+    label,
+    input,
+    select,
+    button {
+        display: block;
+        margin: 8px 0;
+    }
+
+    input,
+    select {
+        padding: 6px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    /* Result box used by multiple pages */
+    .result {
+        margin-top: 12px;
+        padding: 8px;
+        background: #f6f6f6;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    /* Small utility */
+    .small-muted {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 600px) {
+        .login-wrap {
+            padding: 18px;
+            margin: 0 12px;
+        }
+
+        .page-content,
+        .calculator-container {
+            margin: 16px;
+            padding: 0 8px;
+        }
+    }

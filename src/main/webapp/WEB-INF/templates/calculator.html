@@ -8,19 +8,23 @@
     <link rel="stylesheet" href="{{ctx}}/static/css/style.css">
 </head>
 
-<body class="calculator-container">
-    <h1>Calculator</h1>
-    <form method="get" action="{{ctx}}/calculator"> <label>A: <input name="a" value="{{a}}" /></label> <label>B: <input
-                name="b" value="{{b}}" /></label> <label>Operation: <select name="op">
-                <option value="add" {{op_add}}>add</option>
-                <option value="sub" {{op_sub}}>sub</option>
-                <option value="mul" {{op_mul}}>mul</option>
-                <option value="div" {{op_div}}>div</option>
-            </select> </label> <button type="submit">Calculate</button> </form>
+<body>
+    <div class="page-content calculator-container">
+        <p class="signed-in">Signed in as: {{user}} — <a href="{{ctx}}/logout">Sign out</a></p>
 
-    {{result_block}}
+        <h1>Calculator</h1>
+        <form method="get" action="{{ctx}}/calculator"> <label>A: <input name="a" value="{{a}}" /></label> <label>B:
+                <input name="b" value="{{b}}" /></label> <label>Operation: <select name="op">
+                    <option value="add" {{op_add}}>add</option>
+                    <option value="sub" {{op_sub}}>sub</option>
+                    <option value="mul" {{op_mul}}>mul</option>
+                    <option value="div" {{op_div}}>div</option>
+                </select> </label> <button type="submit">Calculate</button> </form>
 
-    <p><a href="{{ctx}}/home">Back to Home</a></p>
+        {{result_block}}
+
+        <p><a href="{{ctx}}/home">Back to Home</a></p>
+    </div>
 </body>
 
 </html>

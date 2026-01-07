@@ -22,3 +22,10 @@ You can access the server after is deployed:
 ```
 http://localhost:8080/app
 ```
+
+Basic login:
+
+```
+User: admin
+Pass: admin
+```
