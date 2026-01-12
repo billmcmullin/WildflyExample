@@ -2,6 +2,7 @@ package com.app.admin;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import javax.sql.DataSource;
+
 /**
  * Parasoft Jtest UTA: Test class for CreateUserServlet
  *
@@ -362,6 +366,54 @@ public class CreateUserServletTest
         assertThrows(ServletException.class, () -> {
             underTest.doPost(req, resp);
         });
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Verifies doPost handles a null HttpSession (req.getSession returns null) without throwing and uses the request context path.
+     *
+     * @author bmcmullin
+     * @see CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     */
+    @Test
+    public void testDoPost_nullSessionHandled() throws Throwable {
+        // Given
+        CreateUserServlet underTest = new CreateUserServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = "/example/app"; // UTA: LLM default value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        HttpSession getSessionResult = null; // UTA: configured value
+        when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        underTest.doPost(req, resp);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Verifies doPost handles an existing HttpSession whose user attribute is null, ensuring no exception and appropriate handling of the missing attribute.
+     *
+     * @author bmcmullin
+     * @see CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     */
+    @Test
+    public void testDoPost_sessionWithoutUserAttributeHandled() throws Throwable {
+        // Given
+        CreateUserServlet underTest = new CreateUserServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = "/example/app"; // UTA: LLM default value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        HttpSession getSessionResult = mock(HttpSession.class);
+        String getAttributeResult = null; // UTA: configured value
+        when(getSessionResult.getAttribute(nullable(String.class))).thenReturn(getAttributeResult);
+        when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        underTest.doPost(req, resp);
 
     }
 

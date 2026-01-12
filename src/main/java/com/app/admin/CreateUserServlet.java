@@ -44,6 +44,8 @@ public class CreateUserServlet extends HttpServlet {
         Map<String, String> vals = new HashMap<>();
         vals.put("ctx", TemplateRenderer.escapeHtml(req.getContextPath()));
         vals.put("message", "");
+        // pass the current user into the template
+        vals.put("user", TemplateRenderer.escapeHtml(user));
         String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/createuser.html", vals);
         resp.setContentType("text/html;charset=UTF-8");
         resp.getWriter().write(html);
@@ -74,6 +76,7 @@ public class CreateUserServlet extends HttpServlet {
                 Map<String, String> vals = new HashMap<>();
                 vals.put("ctx", TemplateRenderer.escapeHtml(req.getContextPath()));
                 vals.put("message", "Username and password are required.");
+                vals.put("user", TemplateRenderer.escapeHtml(adminUser));
                 String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/createuser.html", vals);
                 resp.setContentType("text/html;charset=UTF-8");
                 resp.getWriter().write(html);
@@ -87,6 +90,7 @@ public class CreateUserServlet extends HttpServlet {
                 Map<String, String> vals = new HashMap<>();
                 vals.put("ctx", TemplateRenderer.escapeHtml(req.getContextPath()));
                 vals.put("message", "Failed to create user (maybe already exists).");
+                vals.put("user", TemplateRenderer.escapeHtml(adminUser));
                 String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/createuser.html", vals);
                 resp.setContentType("text/html;charset=UTF-8");
                 resp.getWriter().write(html);
