@@ -1,2 +1,7 @@
 target/
 .vs/
+.idea/
+.mvn/
+.settings/
+.classpath
+.project
