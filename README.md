@@ -31,22 +31,22 @@ mvnw.cmd -pl app clean package
 1. Deploy `app/target/app.war` to WildFly.
 2. Ensure the app is reachable at `http://localhost:8080/app` (or override `app.base.url`).
 3. Update `selenium-testng-tests/src/test/resources/coverage-integration.properties` for your CTP environment.
-4. Run the Selenium module tests:
+4. Run the Selenium module tests using profile `run-selenium-tests`:
 
 ```sh
-mvnw.cmd -pl selenium-testng-tests test
+mvnw.cmd -pl selenium-testng-tests -Prun-selenium-tests test
 ```
 
 Optional overrides:
 
 ```sh
-mvnw.cmd -pl selenium-testng-tests test -Dapp.base.url=http://localhost:8080/app -Dapp.username=admin -Dapp.password=admin
+mvnw.cmd -pl selenium-testng-tests -Prun-selenium-tests test -Dapp.base.url=http://localhost:8080/app -Dapp.username=admin -Dapp.password=admin
 ```
 
 Optional HTTPS and precheck flags:
 
 ```sh
-mvnw.cmd -pl selenium-testng-tests test -D"app.base.url=https://heavyarms/app" -D"app.username=admin" -D"app.password=admin" -D"app.accept.insecure.certs=true" -D"app.skip.reachability.check=false"
+mvnw.cmd -pl selenium-testng-tests -Prun-selenium-tests test -D"app.base.url=https://heavyarms/app" -D"app.username=admin" -D"app.password=admin" -D"app.accept.insecure.certs=true" -D"app.skip.reachability.check=false"
 ```
 
 - `app.accept.insecure.certs` (default: `true`): allow self-signed/untrusted HTTPS certificates in the URL precheck and Chrome session.
@@ -69,6 +69,7 @@ The default value is defined in `selenium-testng-tests/pom.xml` and can be chang
 - `No plugin found for prefix '.base.url=https'`: quote `-D` properties in PowerShell (for example `-D"app.base.url=https://heavyarms/app"`).
 - `Application endpoint is not reachable`: the host/port/path is not reachable from the machine running Maven, or DNS name resolution is different between host and container networks.
 - `expected [App Home] but found [Login]`: credentials are invalid for that target app, or the URL points to a different login flow.
+- Selenium tests not running in reactor build: this is expected unless profile `run-selenium-tests` is enabled.
 
 If the Parasoft artifacts are not yet in your local Maven cache, install them first from the sibling project:
 
