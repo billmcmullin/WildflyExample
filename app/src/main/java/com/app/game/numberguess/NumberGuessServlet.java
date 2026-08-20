@@ -242,7 +242,7 @@ public class NumberGuessServlet extends HttpServlet {
         session.setAttribute(ATTR_REMAIN, MAX_GUESSES);
         session.setAttribute(ATTR_HISTORY, new ArrayList<String>());
         session.setAttribute(ATTR_MESSAGE, null);
-        session.setAttribute(ATTR_OVER, false);
+        session.setAttribute(ATTR_OVER, true);
         session.removeAttribute("ng.lastGuess");
     }
 }

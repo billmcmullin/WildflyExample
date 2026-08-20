@@ -1,0 +1,13 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="WildflyExample Selenium Suite" verbose="1">
+    <listeners>
+        <listener class-name="com.parasoft.coverage.integration.testng.ParasoftTestNGSuiteListener"/>
+        <listener class-name="com.parasoft.coverage.integration.testng.ParasoftTestNGTestListener"/>
+    </listeners>
+
+    <test name="BrowserSmoke">
+        <classes>
+            <class name="com.app.selenium.LoginAndNavigationTest"/>
+        </classes>
+    </test>
+</suite>
