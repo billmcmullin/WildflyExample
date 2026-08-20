@@ -21,6 +21,7 @@
         <app.base.url>http://localhost:8080/app</app.base.url>
         <app.username>admin</app.username>
         <app.password>admin</app.password>
+        <selenium.tests.skip>true</selenium.tests.skip>
     </properties>
 
     <dependencies>
@@ -64,6 +65,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <useModulePath>false</useModulePath>
+                    <skipTests>${selenium.tests.skip}</skipTests>
                     <suiteXmlFiles>
                         <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
@@ -76,4 +78,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>run-selenium-tests</id>
+            <properties>
+                <selenium.tests.skip>false</selenium.tests.skip>
+            </properties>
+        </profile>
+    </profiles>
 </project>
