@@ -6,6 +6,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -31,8 +32,11 @@ public class LoginAndNavigationTest {
     private static final Duration PAGE_TIMEOUT = Duration.ofSeconds(10);
     private static final SSLSocketFactory TRUST_ALL_SOCKET_FACTORY = createTrustAllSocketFactory();
     private static final HostnameVerifier TRUST_ALL_HOSTNAME_VERIFIER = (hostname, session) -> true;
+        private static final String DEFAULT_CHROME_ARGS =
+            "--headless=new,--disable-gpu,--window-size=1600,900,--no-sandbox,--disable-dev-shm-usage";
 
     private ChromeDriver driver;
+        private SeleniumCoverageIntegration.ChromeCoverageConfig chromeCoverageConfig;
     private String baseUrl;
 
     @BeforeClass
@@ -49,12 +53,13 @@ public class LoginAndNavigationTest {
         }
 
         try {
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless=new", "--disable-gpu", "--window-size=1600,900");
-            options.setAcceptInsecureCerts(acceptInsecureCerts);
+            String browserHeaderMode = System.getProperty("coverage.browser.header.mode", "auto")
+                    .toLowerCase(Locale.ROOT)
+                    .trim();
+            String explicitBaggageHeader = System.getProperty("coverage.baggage.header", "").trim();
 
-            driver = new ChromeDriver(options);
-            SeleniumCoverageIntegration.configureCdpBaggageHeader(driver);
+            ChromeOptions options = createChromeOptions(acceptInsecureCerts);
+            driver = createDriverWithCoverage(options, browserHeaderMode, explicitBaggageHeader, acceptInsecureCerts);
             driver.manage().timeouts().pageLoadTimeout(PAGE_TIMEOUT);
         } catch (Exception ex) {
             throw new SkipException("Unable to start Chrome browser for Selenium test: " + ex.getMessage(), ex);
@@ -65,6 +70,9 @@ public class LoginAndNavigationTest {
     public void tearDown() {
         if (driver != null) {
             driver.quit();
+        }
+        if (chromeCoverageConfig != null) {
+            chromeCoverageConfig.close();
         }
     }
 
@@ -115,6 +123,56 @@ public class LoginAndNavigationTest {
                 connection.disconnect();
             }
         }
+    }
+
+    private ChromeDriver createDriverWithCoverage(
+            ChromeOptions options,
+            String browserHeaderMode,
+            String explicitBaggageHeader,
+            boolean acceptInsecureCerts) {
+        switch (browserHeaderMode) {
+            case "off":
+                return new ChromeDriver(options);
+            case "proxy":
+                chromeCoverageConfig = SeleniumCoverageIntegration.configureProxyBaggageHeader(options);
+                return new ChromeDriver(chromeCoverageConfig.getChromeOptions());
+            case "cdp":
+                return createDriverWithCdpCoverage(options, explicitBaggageHeader);
+            case "auto":
+            default:
+                try {
+                    return createDriverWithCdpCoverage(options, explicitBaggageHeader);
+                } catch (RuntimeException cdpError) {
+                    ChromeOptions proxyOptions = createChromeOptions(acceptInsecureCerts);
+                    chromeCoverageConfig = SeleniumCoverageIntegration.configureProxyBaggageHeader(proxyOptions);
+                    return new ChromeDriver(chromeCoverageConfig.getChromeOptions());
+                }
+        }
+    }
+
+    private ChromeDriver createDriverWithCdpCoverage(ChromeOptions options, String explicitBaggageHeader) {
+        ChromeDriver cdpDriver = new ChromeDriver(options);
+        if (explicitBaggageHeader.isBlank()) {
+            SeleniumCoverageIntegration.configureCdpBaggageHeader(cdpDriver);
+        } else {
+            SeleniumCoverageIntegration.configureCdpBaggageHeader(cdpDriver, explicitBaggageHeader);
+        }
+        return cdpDriver;
+    }
+
+    private ChromeOptions createChromeOptions(boolean acceptInsecureCerts) {
+        ChromeOptions options = new ChromeOptions();
+        options.setAcceptInsecureCerts(acceptInsecureCerts);
+
+        String argsProperty = System.getProperty("chrome.args", DEFAULT_CHROME_ARGS);
+        for (String arg : argsProperty.split(",")) {
+            String trimmed = arg.trim();
+            if (!trimmed.isEmpty()) {
+                options.addArguments(trimmed);
+            }
+        }
+
+        return options;
     }
 
     private static SSLSocketFactory createTrustAllSocketFactory() {
