@@ -1,0 +1,55 @@
+plugins {
+    id 'base'
+}
+
+group = 'com.example'
+version = '1.0-SNAPSHOT'
+description = 'Parent reactor for the WildFly app and Selenium TestNG browser tests'
+
+def requiredProp = { String key ->
+    def value = providers.gradleProperty(key).orNull
+    if (value == null || value.trim().isEmpty()) {
+        throw new RuntimeException("Missing required Gradle property '${key}'")
+    }
+    value
+}
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = requiredProp('project.build.sourceEncoding')
+        options.release = requiredProp('maven.compiler.release').toInteger()
+    }
+
+    tasks.register('verify') {
+        group = LifecycleBasePlugin.VERIFICATION_GROUP
+        description = 'Gradle alias for Maven verify (depends on check).'
+        dependsOn tasks.named('check')
+    }
+
+    tasks.register('package') {
+        group = LifecycleBasePlugin.BUILD_GROUP
+        description = 'Gradle alias for Maven package (depends on assemble).'
+        dependsOn tasks.named('assemble')
+    }
+}
+
+tasks.register('verify') {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Root alias for Maven verify (depends on all subproject checks).'
+    dependsOn subprojects.collect { it.tasks.named('check') }
+}
+
+tasks.register('package') {
+    group = LifecycleBasePlugin.BUILD_GROUP
+    description = 'Root alias for Maven package (depends on all subproject assembles).'
+    dependsOn subprojects.collect { it.tasks.named('assemble') }
+}

@@ -27,23 +27,46 @@ import org.testng.annotations.Test;
 
 import com.parasoft.coverage.integration.selenium.SeleniumCoverageIntegration;
 
+/*
+ * Working Selenium + Parasoft coverage example for this repository.
+ *
+ * PARASOFT COVERAGE PARTS IN THIS CLASS
+ * - Uses SeleniumCoverageIntegration to inject a baggage header used for coverage correlation.
+ * - Reads -Dcoverage.browser.header.mode (off, proxy, cdp, auto).
+ * - Reads optional -Dcoverage.baggage.header for an explicit baggage value.
+ * - Sets up coverage wiring in createDriverWithCoverage(...) and createDriverWithCdpCoverage(...).
+ * - Applies per-test baggage header behavior in applyCoverageHeaderForCurrentTest().
+ * - Cleans up proxy coverage resources in tearDown() when proxy mode is used.
+ *
+ * NORMAL TEST PARTS (NOT PARASOFT-SPECIFIC)
+ * - App reachability checks, login assertions, and page navigation.
+ * - Standard Chrome options and SSL reachability helpers for local/self-signed environments.
+ */
 public class LoginAndNavigationTest {
 
     private static final Duration PAGE_TIMEOUT = Duration.ofSeconds(10);
     private static final SSLSocketFactory TRUST_ALL_SOCKET_FACTORY = createTrustAllSocketFactory();
     private static final HostnameVerifier TRUST_ALL_HOSTNAME_VERIFIER = (hostname, session) -> true;
-        private static final String DEFAULT_CHROME_ARGS =
+    private static final String DEFAULT_CHROME_ARGS =
             "--headless=new,--disable-gpu,--window-size=1600,900,--no-sandbox,--disable-dev-shm-usage";
 
     private ChromeDriver driver;
-        private SeleniumCoverageIntegration.ChromeCoverageConfig chromeCoverageConfig;
+    // Holds proxy-mode Parasoft coverage config and proxy lifecycle for this browser session.
+    private SeleniumCoverageIntegration.ChromeCoverageConfig chromeCoverageConfig;
     private String baseUrl;
+    // Controls where the Parasoft baggage header is injected: off, proxy, cdp, or auto.
     private String browserHeaderMode;
+    // Optional command-line override for a fixed baggage header value.
+    // Example: -Dcoverage.baggage.header=test-operator-id=jonnytest
+    // If blank, the coverage library generates/uses the current test baggage header.
     private String explicitBaggageHeader;
     private boolean usingProxyHeaderInjection;
 
+    // Mixed setup: normal Selenium initialization plus Parasoft coverage mode/header configuration.
     @BeforeClass
     public void setUp() {
+        // Base application URL under test. Override for other environments with:
+        // -Dapp.base.url=http://your-host:8080/app
         baseUrl = System.getProperty("app.base.url", "http://localhost:8080/app");
         boolean acceptInsecureCerts = Boolean.parseBoolean(System.getProperty("app.accept.insecure.certs", "true"));
         boolean skipReachabilityCheck = Boolean.parseBoolean(System.getProperty("app.skip.reachability.check", "false"));
@@ -56,10 +79,13 @@ public class LoginAndNavigationTest {
         }
 
         try {
-                browserHeaderMode = System.getProperty("coverage.browser.header.mode", "auto")
+            // Command-line properties used by this test to control baggage header behavior:
+            // -Dcoverage.browser.header.mode=cdp|proxy|auto|off
+            // -Dcoverage.baggage.header=test-operator-id=jonnytest
+            browserHeaderMode = System.getProperty("coverage.browser.header.mode", "auto")
                     .toLowerCase(Locale.ROOT)
                     .trim();
-                explicitBaggageHeader = System.getProperty("coverage.baggage.header", "").trim();
+            explicitBaggageHeader = System.getProperty("coverage.baggage.header", "").trim();
 
             ChromeOptions options = createChromeOptions(acceptInsecureCerts);
             driver = createDriverWithCoverage(options, browserHeaderMode, explicitBaggageHeader, acceptInsecureCerts);
@@ -69,6 +95,7 @@ public class LoginAndNavigationTest {
         }
     }
 
+    // Mixed cleanup: normal driver shutdown plus Parasoft proxy coverage resource shutdown.
     @AfterClass(alwaysRun = true)
     public void tearDown() {
         if (driver != null) {
@@ -79,6 +106,7 @@ public class LoginAndNavigationTest {
         }
     }
 
+    // Main functional UI test; only the first line is Parasoft-specific baggage header application.
     @Test
     public void loginAndOpenCalculatorFromHome() {
         applyCoverageHeaderForCurrentTest();
@@ -108,6 +136,7 @@ public class LoginAndNavigationTest {
         Assert.assertTrue(driver.getPageSource().contains("Calculator"), "Calculator page should render content.");
     }
 
+    // Normal helper only: verifies endpoint reachability before tests start.
     private boolean isReachable(String url, boolean acceptInsecureCerts) {
         HttpURLConnection connection = null;
         try {
@@ -129,6 +158,8 @@ public class LoginAndNavigationTest {
         }
     }
 
+    // Parasoft-specific helper: chooses baggage-header injection strategy (off/proxy/cdp/auto).
+    // Also sets whether per-test header updates should go through proxy or CDP.
     private ChromeDriver createDriverWithCoverage(
             ChromeOptions options,
             String browserHeaderMode,
@@ -139,6 +170,7 @@ public class LoginAndNavigationTest {
                 usingProxyHeaderInjection = false;
                 return new ChromeDriver(options);
             case "proxy":
+                // Proxy mode injects baggage headers through a local proxy wrapper.
                 chromeCoverageConfig = SeleniumCoverageIntegration.configureProxyBaggageHeader(options);
                 usingProxyHeaderInjection = true;
                 return new ChromeDriver(chromeCoverageConfig.getChromeOptions());
@@ -159,11 +191,15 @@ public class LoginAndNavigationTest {
         }
     }
 
+    // Parasoft-specific helper: applies the baggage header before each test action sequence.
+    // If -Dcoverage.baggage.header is set, that exact value is used; otherwise test-scoped default is used.
     private void applyCoverageHeaderForCurrentTest() {
         if (usingProxyHeaderInjection && chromeCoverageConfig != null && chromeCoverageConfig.getProxy() != null) {
             if (explicitBaggageHeader.isBlank()) {
+                // No explicit -Dcoverage.baggage.header provided: use test-scoped header value.
                 chromeCoverageConfig.getProxy().useCurrentTestBaggageHeader();
             } else {
+                // Explicit header from -Dcoverage.baggage.header is applied here.
                 chromeCoverageConfig.getProxy().setBaggageHeader(explicitBaggageHeader);
             }
             return;
@@ -174,22 +210,28 @@ public class LoginAndNavigationTest {
         }
 
         if (explicitBaggageHeader.isBlank()) {
+            // CDP mode with auto-managed header value.
             SeleniumCoverageIntegration.configureCdpBaggageHeader(driver);
         } else {
+            // CDP mode with explicit header from -Dcoverage.baggage.header.
             SeleniumCoverageIntegration.configureCdpBaggageHeader(driver, explicitBaggageHeader);
         }
     }
 
+    // Parasoft-specific helper: wires CDP header injection on a newly created driver.
     private ChromeDriver createDriverWithCdpCoverage(ChromeOptions options, String explicitBaggageHeader) {
         ChromeDriver cdpDriver = new ChromeDriver(options);
         if (explicitBaggageHeader.isBlank()) {
+            // Configure CDP interception to use the current test baggage header.
             SeleniumCoverageIntegration.configureCdpBaggageHeader(cdpDriver);
         } else {
+            // Configure CDP interception with explicit -Dcoverage.baggage.header value.
             SeleniumCoverageIntegration.configureCdpBaggageHeader(cdpDriver, explicitBaggageHeader);
         }
         return cdpDriver;
     }
 
+    // Normal helper only: builds Chrome runtime options and optional command-line browser args.
     private ChromeOptions createChromeOptions(boolean acceptInsecureCerts) {
         ChromeOptions options = new ChromeOptions();
         options.setAcceptInsecureCerts(acceptInsecureCerts);
@@ -205,6 +247,7 @@ public class LoginAndNavigationTest {
         return options;
     }
 
+    // Normal helper only: used for HTTPS reachability checks in test environments with self-signed certs.
     private static SSLSocketFactory createTrustAllSocketFactory() {
         try {
             TrustManager[] trustAll = new TrustManager[] {
