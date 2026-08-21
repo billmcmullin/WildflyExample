@@ -52,13 +52,6 @@
             <version>${coverage.integration.version}</version>
             <scope>test</scope>
         </dependency>
-            
-        <dependency>
-            <groupId>com.parasoft</groupId>
-            <artifactId>coverage-integration-api</artifactId>
-            <version>${coverage.integration.version}</version>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
