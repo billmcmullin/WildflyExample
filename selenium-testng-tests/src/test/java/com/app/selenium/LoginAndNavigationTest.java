@@ -38,6 +38,9 @@ public class LoginAndNavigationTest {
     private ChromeDriver driver;
         private SeleniumCoverageIntegration.ChromeCoverageConfig chromeCoverageConfig;
     private String baseUrl;
+    private String browserHeaderMode;
+    private String explicitBaggageHeader;
+    private boolean usingProxyHeaderInjection;
 
     @BeforeClass
     public void setUp() {
@@ -53,10 +56,10 @@ public class LoginAndNavigationTest {
         }
 
         try {
-            String browserHeaderMode = System.getProperty("coverage.browser.header.mode", "auto")
+                browserHeaderMode = System.getProperty("coverage.browser.header.mode", "auto")
                     .toLowerCase(Locale.ROOT)
                     .trim();
-            String explicitBaggageHeader = System.getProperty("coverage.baggage.header", "").trim();
+                explicitBaggageHeader = System.getProperty("coverage.baggage.header", "").trim();
 
             ChromeOptions options = createChromeOptions(acceptInsecureCerts);
             driver = createDriverWithCoverage(options, browserHeaderMode, explicitBaggageHeader, acceptInsecureCerts);
@@ -78,6 +81,7 @@ public class LoginAndNavigationTest {
 
     @Test
     public void loginAndOpenCalculatorFromHome() {
+        applyCoverageHeaderForCurrentTest();
         driver.get(baseUrl + "/login");
 
         WebElement username = driver.findElement(By.name("username"));
@@ -132,21 +136,47 @@ public class LoginAndNavigationTest {
             boolean acceptInsecureCerts) {
         switch (browserHeaderMode) {
             case "off":
+                usingProxyHeaderInjection = false;
                 return new ChromeDriver(options);
             case "proxy":
                 chromeCoverageConfig = SeleniumCoverageIntegration.configureProxyBaggageHeader(options);
+                usingProxyHeaderInjection = true;
                 return new ChromeDriver(chromeCoverageConfig.getChromeOptions());
             case "cdp":
+                usingProxyHeaderInjection = false;
                 return createDriverWithCdpCoverage(options, explicitBaggageHeader);
             case "auto":
             default:
                 try {
+                    usingProxyHeaderInjection = false;
                     return createDriverWithCdpCoverage(options, explicitBaggageHeader);
                 } catch (RuntimeException cdpError) {
                     ChromeOptions proxyOptions = createChromeOptions(acceptInsecureCerts);
                     chromeCoverageConfig = SeleniumCoverageIntegration.configureProxyBaggageHeader(proxyOptions);
+                    usingProxyHeaderInjection = true;
                     return new ChromeDriver(chromeCoverageConfig.getChromeOptions());
                 }
+        }
+    }
+
+    private void applyCoverageHeaderForCurrentTest() {
+        if (usingProxyHeaderInjection && chromeCoverageConfig != null && chromeCoverageConfig.getProxy() != null) {
+            if (explicitBaggageHeader.isBlank()) {
+                chromeCoverageConfig.getProxy().useCurrentTestBaggageHeader();
+            } else {
+                chromeCoverageConfig.getProxy().setBaggageHeader(explicitBaggageHeader);
+            }
+            return;
+        }
+
+        if ("off".equals(browserHeaderMode)) {
+            return;
+        }
+
+        if (explicitBaggageHeader.isBlank()) {
+            SeleniumCoverageIntegration.configureCdpBaggageHeader(driver);
+        } else {
+            SeleniumCoverageIntegration.configureCdpBaggageHeader(driver, explicitBaggageHeader);
         }
     }
 
