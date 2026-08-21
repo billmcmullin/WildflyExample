@@ -1,0 +1,3 @@
+rootProject.name = 'wildflyexample-parent'
+
+include 'app', 'selenium-testng-tests'

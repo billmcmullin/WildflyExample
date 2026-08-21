@@ -1,0 +1,42 @@
+plugins {
+    id 'war'
+}
+
+description = 'WildFly-deployable webapp providing a JSON REST API for basic operations'
+
+def prop = { String key ->
+    def value = providers.gradleProperty(key).orNull
+    if (value == null || value.trim().isEmpty()) {
+        throw new RuntimeException("Missing required Gradle property '${key}'")
+    }
+    value
+}
+
+dependencies {
+    implementation "org.hsqldb:hsqldb:${prop('hsqldb.version')}"
+
+    compileOnly "jakarta.servlet:jakarta.servlet-api:${prop('jakarta.servlet.version')}"
+    compileOnly "jakarta.json:jakarta.json-api:${prop('jakarta.json.version')}"
+    testImplementation "jakarta.servlet:jakarta.servlet-api:${prop('jakarta.servlet.version')}"
+    testImplementation "jakarta.json:jakarta.json-api:${prop('jakarta.json.version')}"
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${prop('junit.jupiter.version')}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${prop('junit.jupiter.version')}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:${prop('junit.platform.version')}"
+
+    testImplementation "org.mockito:mockito-core:${prop('mockito.version')}"
+    testImplementation 'org.glassfish:jakarta.json:2.0.1'
+    testImplementation 'org.eclipse.parsson:parsson:1.1.7'
+}
+
+tasks.named('war') {
+    archiveBaseName = 'app'
+}
+
+tasks.named('jar') {
+    enabled = false
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
