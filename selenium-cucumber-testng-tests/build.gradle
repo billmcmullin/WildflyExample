@@ -1,0 +1,70 @@
+description = 'Separate Selenium + Cucumber (TestNG) example with Parasoft coverage integration'
+
+// Required runtime/build wiring for Parasoft coverage with Selenium + Cucumber(TestNG):
+// 1) Execute tests through a dedicated TestNG suite that runs the Cucumber runner.
+// 2) Include Cucumber + Selenium dependencies.
+// 3) Include coverage-integration-cucumber and coverage-integration-selenium dependencies.
+// 4) Forward coverage/parasoft JVM flags so coverage behavior can be controlled via -D.
+
+def propOrDefault = { String key, String defaultValue ->
+    providers.gradleProperty(key).orElse(System.getProperty(key, defaultValue)).get()
+}
+
+def runCucumberSeleniumProfile = project.hasProperty('run-cucumber-selenium-tests') ||
+        project.hasProperty('runCucumberSeleniumTests')
+def cucumberSeleniumTestsSkip = propOrDefault('selenium.cucumber.tests.skip', 'true').toBoolean()
+
+def configureCucumberSeleniumTask = { Test task, boolean obeySkip ->
+    task.useTestNG {
+        // Required: this suite runs the Cucumber TestNG runner class.
+        suites 'src/test/resources/testng-cucumber.xml'
+    }
+
+    task.systemProperty 'app.base.url', propOrDefault('app.base.url', 'http://localhost:8080/app')
+    task.systemProperty 'app.username', propOrDefault('app.username', 'admin')
+    task.systemProperty 'app.password', propOrDefault('app.password', 'admin')
+
+    // Required for coverage customization from command line:
+    // forwards -Dcoverage.* and -Dparasoft.* flags into the Selenium/Cucumber test JVM.
+    def forwardedPrefixes = ['app.', 'coverage.', 'parasoft.', 'org.slf4j.']
+    System.properties.each { key, value ->
+        def propName = key.toString()
+        if (propName == 'chrome.args' || forwardedPrefixes.any { propName.startsWith(it) }) {
+            task.systemProperty(propName, value)
+        }
+    }
+
+    if (obeySkip) {
+        task.onlyIf {
+            !cucumberSeleniumTestsSkip || runCucumberSeleniumProfile
+        }
+    }
+}
+
+dependencies {
+    // Required test stack: TestNG runner, Cucumber glue/runtime, and Selenium WebDriver APIs.
+    testImplementation "org.testng:testng:${propOrDefault('testng.version', '7.10.2')}"
+    testImplementation "io.cucumber:cucumber-java:${propOrDefault('cucumber.version', '7.20.1')}"
+    testImplementation "io.cucumber:cucumber-testng:${propOrDefault('cucumber.version', '7.20.1')}"
+    testImplementation "org.seleniumhq.selenium:selenium-java:${propOrDefault('selenium.version', '4.24.0')}"
+
+    // Required Parasoft integrations for this Cucumber module:
+    // - coverage-integration-cucumber: reports Cucumber scenario lifecycle to CTP.
+    // - coverage-integration-selenium: propagates baggage header in browser traffic.
+    testImplementation "com.parasoft:coverage-integration-cucumber:${propOrDefault('coverage.integration.version', '1.0.0-SNAPSHOT')}"
+    testImplementation "com.parasoft:coverage-integration-selenium:${propOrDefault('coverage.integration.version', '1.0.0-SNAPSHOT')}"
+
+    testImplementation 'org.slf4j:slf4j-simple:1.7.36'
+}
+
+tasks.named('test', Test) {
+    configureCucumberSeleniumTask(delegate as Test, true)
+}
+
+tasks.register('runCucumberSeleniumTests', Test) {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Runs Selenium Cucumber TestNG browser tests with Parasoft coverage integration.'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    configureCucumberSeleniumTask(delegate as Test, false)
+}

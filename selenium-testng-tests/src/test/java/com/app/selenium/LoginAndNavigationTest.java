@@ -24,7 +24,7 @@ import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
+//Parasoft Coverage Requirement
 import com.parasoft.coverage.integration.selenium.SeleniumCoverageIntegration;
 
 /*

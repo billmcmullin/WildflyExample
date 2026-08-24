@@ -11,21 +11,23 @@
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>selenium-testng-tests</artifactId>
+    <artifactId>selenium-cucumber-testng-tests</artifactId>
     <packaging>jar</packaging>
 
-    <name>Selenium Browser Tests (TestNG)</name>
-    <description>Browser tests configured for Parasoft coverage collection</description>
+    <name>Selenium Cucumber Browser Tests (TestNG)</name>
+    <description>Separate Selenium + Cucumber (TestNG) example with Parasoft coverage integration</description>
 
     <properties>
         <app.base.url>http://localhost:8080/app</app.base.url>
         <app.username>admin</app.username>
         <app.password>admin</app.password>
-        <selenium.tests.skip>true</selenium.tests.skip>
+
+        <selenium.cucumber.tests.skip>true</selenium.cucumber.tests.skip>
+        <testng.suite.file>src/test/resources/testng-cucumber.xml</testng.suite.file>
     </properties>
 
     <dependencies>
-        <!-- Required test runner for selenium-testng-tests and Parasoft TestNG listeners. -->
+        <!-- Required TestNG runtime because Cucumber runner extends AbstractTestNGCucumberTests. -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -33,7 +35,21 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Required browser automation APIs for end-to-end UI coverage. -->
+        <!-- Required Cucumber stack for feature parsing and TestNG runner integration. -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-testng</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Required browser automation APIs for scenario steps. -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
@@ -41,15 +57,15 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Required Parasoft listener integration for TestNG suite/test lifecycle reporting. -->
+        <!-- Required Parasoft integration for Cucumber lifecycle reporting. -->
         <dependency>
             <groupId>com.parasoft</groupId>
-            <artifactId>coverage-integration-testng</artifactId>
+            <artifactId>coverage-integration-cucumber</artifactId>
             <version>${coverage.integration.version}</version>
             <scope>test</scope>
         </dependency>
 
-        <!-- Required Parasoft browser integration for Selenium baggage-header propagation. -->
+        <!-- Required Parasoft integration for Selenium baggage-header propagation. -->
         <dependency>
             <groupId>com.parasoft</groupId>
             <artifactId>coverage-integration-selenium</artifactId>
@@ -76,14 +92,13 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <useModulePath>false</useModulePath>
-                    <skipTests>${selenium.tests.skip}</skipTests>
+                    <skipTests>${selenium.cucumber.tests.skip}</skipTests>
 
-                    <!-- Required: execute the TestNG suite that declares Parasoft listeners. -->
+                    <!-- Required: execute the dedicated TestNG suite running the Cucumber runner. -->
                     <suiteXmlFiles>
-                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                        <suiteXmlFile>${testng.suite.file}</suiteXmlFile>
                     </suiteXmlFiles>
 
-                    <!-- Forward app runtime properties used by Selenium tests. -->
                     <systemPropertyVariables>
                         <app.base.url>${app.base.url}</app.base.url>
                         <app.username>${app.username}</app.username>
@@ -96,10 +111,9 @@
 
     <profiles>
         <profile>
-            <id>run-selenium-tests</id>
+            <id>run-cucumber-selenium-tests</id>
             <properties>
-                <!-- Profile switch that enables Selenium execution during verify. -->
-                <selenium.tests.skip>false</selenium.tests.skip>
+                <selenium.cucumber.tests.skip>false</selenium.cucumber.tests.skip>
             </properties>
         </profile>
     </profiles>
