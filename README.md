@@ -8,6 +8,7 @@ The project now uses a multi-project Gradle build that mirrors the Maven parent/
 
 - `app`: WAR module for the WildFly-deployable application.
 - `selenium-testng-tests`: Browser test module using Selenium + TestNG with Parasoft coverage listeners.
+- `selenium-cucumber-testng-tests`: Separate browser-test example module using Selenium + Cucumber (running on TestNG) with Parasoft coverage integration.
 
 ## Prerequisites
 
@@ -79,6 +80,7 @@ WAR output path:
 - `mvn clean package` -> `gradlew clean package`
 - `mvn -pl app clean package` -> `gradlew :app:clean :app:package`
 - `mvn -pl selenium-testng-tests verify -Prun-selenium-tests` -> `gradlew :selenium-testng-tests:verify -Prun-selenium-tests`
+- `mvn -pl selenium-cucumber-testng-tests verify -Prun-cucumber-selenium-tests` -> `gradlew :selenium-cucumber-testng-tests:verify -Prun-cucumber-selenium-tests`
 
 ## Migration Notes (Maven + Gradle Side-by-Side)
 
@@ -98,7 +100,49 @@ Behavior parity notes:
 - Root/module `verify` and `package` aliases are provided in Gradle to match Maven lifecycle naming.
 - Selenium tests are skipped by default (equivalent to `selenium.tests.skip=true` in Maven).
 - Setting `-Prun-selenium-tests` enables Selenium execution during `verify` for the `selenium-testng-tests` module.
+- Cucumber Selenium tests are also skipped by default in the separate module (`selenium.cucumber.tests.skip=true`).
+- Setting `-Prun-cucumber-selenium-tests` enables execution during `verify` for `selenium-cucumber-testng-tests`.
 - Custom `-D` flags for `app.*`, `coverage.*`, `parasoft.*`, `org.slf4j.*`, and `chrome.args` are forwarded to the Selenium test JVM.
+
+## Run Selenium + Cucumber (TestNG) + Parasoft Coverage
+
+This is provided as a separate example module: `selenium-cucumber-testng-tests`.
+
+Linux/macOS (`gradlew`):
+
+```sh
+./gradlew :selenium-cucumber-testng-tests:verify -Prun-cucumber-selenium-tests \
+  -Dapp.base.url=http://wildfly:8080/app \
+  -Dapp.username=admin \
+  -Dapp.password=admin \
+  -Dcoverage.browser.header.mode=cdp \
+  -Dcoverage.baggage.header=test-operator-id=jonnytest \
+  -Dorg.slf4j.simpleLogger.log.com.parasoft.coverage.integration=debug
+```
+
+Windows (`gradlew.bat`):
+
+```bat
+gradlew.bat :selenium-cucumber-testng-tests:verify -Prun-cucumber-selenium-tests -Dapp.base.url=http://wildfly:8080/app -Dapp.username=admin -Dapp.password=admin -Dcoverage.browser.header.mode=cdp -Dcoverage.baggage.header=test-operator-id=jonnytest -Dorg.slf4j.simpleLogger.log.com.parasoft.coverage.integration=debug
+```
+
+Linux/macOS (`mvnw`):
+
+```sh
+./mvnw -pl selenium-cucumber-testng-tests verify -Prun-cucumber-selenium-tests \
+  -Dapp.base.url=http://wildfly:8080/app \
+  -Dapp.username=admin \
+  -Dapp.password=admin \
+  -Dcoverage.browser.header.mode=cdp \
+  -Dcoverage.baggage.header=test-operator-id=jonnytest \
+  -Dorg.slf4j.simpleLogger.log.com.parasoft.coverage.integration=debug
+```
+
+Windows (`mvnw.cmd`):
+
+```bat
+mvnw.cmd -pl selenium-cucumber-testng-tests verify -Prun-cucumber-selenium-tests -Dapp.base.url=http://wildfly:8080/app -Dapp.username=admin -Dapp.password=admin -Dcoverage.browser.header.mode=cdp -Dcoverage.baggage.header=test-operator-id=jonnytest -Dorg.slf4j.simpleLogger.log.com.parasoft.coverage.integration=debug
+```
 
 ## Run Selenium + Parasoft Coverage
 
@@ -215,6 +259,7 @@ Optional test flags:
 - `expected [App Home] but found [Login]`: credentials are invalid or target URL is not this sample app.
 - Coverage shows tests but `0%` line coverage: use one header mode only, set valid `envId`, and use the validated `cdp` + explicit `coverage.baggage.header` command above.
 - `CTP startTest response did not include baggage` / `does not support parallel tests`: use `-Dparasoft.coverage.integration.parallel.test.enabled=false`.
+- `SLF4J(W): No SLF4J providers were found`: runtime logger binding is missing or version-mismatched, so `-Dorg.slf4j.simpleLogger.log...=debug` will not print integration logs. Keep `slf4j-simple` aligned with resolved `slf4j-api` (2.x in this project).
 
 If the Parasoft artifacts are not yet in your local Maven cache, install them first from the sibling project:
 

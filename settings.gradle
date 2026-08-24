@@ -1,3 +1,3 @@
 rootProject.name = 'wildflyexample-parent'
 
-include 'app', 'selenium-testng-tests'
+include 'app', 'selenium-testng-tests', 'selenium-cucumber-testng-tests'

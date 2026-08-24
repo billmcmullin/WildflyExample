@@ -1,5 +1,11 @@
 description = 'Browser tests configured for Parasoft coverage collection'
 
+// Required runtime/build wiring for Parasoft coverage with Selenium + TestNG:
+// 1) Execute tests through TestNG suite XML (listeners are declared in testng.xml).
+// 2) Include Selenium and TestNG dependencies.
+// 3) Include coverage-integration-testng and coverage-integration-selenium dependencies.
+// 4) Forward coverage/parasoft JVM flags so coverage behavior can be controlled via -D.
+
 def propOrDefault = { String key, String defaultValue ->
     providers.gradleProperty(key).orElse(System.getProperty(key, defaultValue)).get()
 }
@@ -9,14 +15,17 @@ def seleniumTestsSkip = propOrDefault('selenium.tests.skip', 'true').toBoolean()
 
 def configureSeleniumTestTask = { Test task, boolean obeySkip ->
     task.useTestNG {
+        // Required: this suite file registers Parasoft TestNG listeners for suite/test lifecycle hooks.
         suites 'src/test/resources/testng.xml'
     }
-
+    //Default settings
     task.systemProperty 'app.base.url', propOrDefault('app.base.url', 'http://localhost:8080/app')
     task.systemProperty 'app.username', propOrDefault('app.username', 'admin')
     task.systemProperty 'app.password', propOrDefault('app.password', 'admin')
 
-    // Mimic Maven surefire -D behavior for project-specific and Parasoft runtime flags.
+    // Required for coverage customization from command line:
+    // forwards -Dcoverage.* and -Dparasoft.* flags into the Selenium test JVM.
+    // Also keeps app.* and logging flags aligned with Maven/Surefire behavior.
     def forwardedPrefixes = ['app.', 'coverage.', 'parasoft.', 'org.slf4j.']
     System.properties.each { key, value ->
         def propName = key.toString()
@@ -33,8 +42,13 @@ def configureSeleniumTestTask = { Test task, boolean obeySkip ->
 }
 
 dependencies {
+    // Required test stack: TestNG runner and Selenium WebDriver APIs.
     testImplementation "org.testng:testng:${propOrDefault('testng.version', '7.10.2')}"
     testImplementation "org.seleniumhq.selenium:selenium-java:${propOrDefault('selenium.version', '4.24.0')}"
+
+    // Required Parasoft integrations:
+    // - coverage-integration-testng: starts/stops suite and test reporting lifecycle.
+    // - coverage-integration-selenium: propagates baggage header through browser traffic.
     testImplementation "com.parasoft:coverage-integration-testng:${propOrDefault('coverage.integration.version', '1.0.0-SNAPSHOT')}"
     testImplementation "com.parasoft:coverage-integration-selenium:${propOrDefault('coverage.integration.version', '1.0.0-SNAPSHOT')}"
     testImplementation 'org.slf4j:slf4j-simple:1.7.36'
@@ -46,6 +60,7 @@ tasks.named('test', Test) {
 
 tasks.register('runSeleniumTests', Test) {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
+    // Profile-equivalent task: runs Selenium browser tests even when selenium.tests.skip=true by default.
     description = 'Runs Selenium/TestNG browser tests (Gradle equivalent of Maven run-selenium-tests profile).'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
