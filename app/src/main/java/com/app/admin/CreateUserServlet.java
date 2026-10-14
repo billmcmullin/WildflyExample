@@ -6,13 +6,12 @@ import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
 import com.app.util.RequestParamContext;
-import com.app.dao.UserDao;
+import com.app.util.AppWebConstants;
 import com.app.util.PasswordUtil;
 import com.app.util.ServletResponseUtil;
 import com.app.util.TemplateRenderer;
+import com.app.util.UserDataService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -26,29 +25,30 @@ public class CreateUserServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String ROLE_ADMIN = "ADMIN";
     private static final String ROLE_USER = "USER";
     private static final String TEMPLATE_PATH = "/WEB-INF/templates/createuser.html";
+    private static final String MESSAGE_REDIRECT_FAILED = "Redirect failed";
+    private static final String MESSAGE_TEMPLATE_RENDER_ERROR = "Template render error";
+    private static final String KEY_CTX = "ctx";
+    private static final String KEY_MESSAGE = "message";
+    private static final String KEY_USER = "user";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         // ensure admin
         HttpSession session = req.getSession(false);
         String user = session != null ? (String) session.getAttribute("user") : null;
-        RequestParamContext requestContext = new RequestParamContext(req);
         if (user == null) {
             try {
-                resp.sendRedirect("/login");
+                resp.sendRedirect(AppWebConstants.LOGIN_PATH);
             } catch (IOException ex) {
-                ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Redirect failed");
+                ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, MESSAGE_REDIRECT_FAILED);
             }
             return;
         }
         try {
-            DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
-            UserDao dao = new UserDao(ds);
-            String role = dao.findRoleByUsername(user);
-            if (!ROLE_ADMIN.equals(role)) {
+            String role = UserDataService.findRoleByUsername(req.getServletContext(), user);
+            if (!UserDataService.ROLE_ADMIN.equals(role)) {
                 ServletResponseUtil.sendError(resp, HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
@@ -65,18 +65,16 @@ public class CreateUserServlet extends HttpServlet {
         RequestParamContext requestContext = new RequestParamContext(req);
         if (adminUser == null) {
             try {
-                resp.sendRedirect("/login");
+                resp.sendRedirect(AppWebConstants.LOGIN_PATH);
             } catch (IOException ex) {
-                ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Redirect failed");
+                ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, MESSAGE_REDIRECT_FAILED);
             }
             return;
         }
 
         try {
-            DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
-            UserDao dao = new UserDao(ds);
-            String role = dao.findRoleByUsername(adminUser);
-            if (!ROLE_ADMIN.equals(role)) {
+            String role = UserDataService.findRoleByUsername(req.getServletContext(), adminUser);
+            if (!UserDataService.ROLE_ADMIN.equals(role)) {
                 ServletResponseUtil.sendError(resp, HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
@@ -90,12 +88,12 @@ public class CreateUserServlet extends HttpServlet {
             }
 
             String normalizedRole = newRole != null && !newRole.isBlank() ? newRole : ROLE_USER;
-            boolean ok = dao.createUser(username.trim(), PasswordUtil.hashPassword(password), normalizedRole);
+            boolean ok = UserDataService.createUser(req.getServletContext(), username.trim(), PasswordUtil.hashPassword(password), normalizedRole);
             if (ok) {
                 try {
-                    resp.sendRedirect("/home");
+                    resp.sendRedirect(AppWebConstants.HOME_PATH);
                 } catch (IOException ex) {
-                    ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Redirect failed");
+                    ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, MESSAGE_REDIRECT_FAILED);
                 }
             } else {
                 renderForm(req, resp, adminUser, "Failed to create user (maybe already exists).");
@@ -107,15 +105,15 @@ public class CreateUserServlet extends HttpServlet {
 
     private void renderForm(HttpServletRequest req, HttpServletResponse resp, String username, String message) {
         Map<String, String> values = new HashMap<>();
-        values.put("ctx", TemplateRenderer.escapeHtml(req.getContextPath()));
-        values.put("message", TemplateRenderer.escapeHtml(message));
-        values.put("user", TemplateRenderer.escapeHtml(username == null ? "" : username));
+        values.put(KEY_CTX, TemplateRenderer.escapeHtml(req.getContextPath()));
+        values.put(KEY_MESSAGE, TemplateRenderer.escapeHtml(message));
+        values.put(KEY_USER, TemplateRenderer.escapeHtml(username == null ? "" : username));
 
         try {
             String html = TemplateRenderer.render(req.getServletContext(), TEMPLATE_PATH, values);
             ServletResponseUtil.writeHtml(resp, html);
         } catch (Exception ex) {
-            ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Template render error");
+            ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, MESSAGE_TEMPLATE_RENDER_ERROR);
         }
     }
 

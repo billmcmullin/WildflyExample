@@ -9,10 +9,6 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
-import com.app.dao.UserDao;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
@@ -28,6 +24,10 @@ public class LoginServlet extends HttpServlet {
     private static final int SESSION_TIMEOUT_SECONDS = 30 * 60; // 30 minutes
     private static final int REMEMBER_DAYS = 7; // remember-me token valid for 7 days
     private static final String LOGIN_TEMPLATE = "/WEB-INF/templates/login.html";
+    private static final String REMEMBER_ON = "on";
+    private static final String COOKIE_NAME_REMEMBER = "remember";
+    private static final String ERROR_REDIRECT_FAILED = "Redirect failed";
+    private static final String ERROR_TEMPLATE_RENDER = "Template render error";
 
     private static final SecureRandom secureRandom = new SecureRandom();
 
@@ -50,27 +50,25 @@ public class LoginServlet extends HttpServlet {
         String pass = requestContext.value("password");
         String redirect = requestContext.value("redirect");
         String remember = requestContext.value("remember"); // "on" if checked
-        String safeRedirect = "/home";
+        String safeRedirect = requestContext.localRedirectOr(redirect, AppWebConstants.HOME_PATH);
 
-        DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
         try {
-            UserDao dao = new UserDao(ds);
-            String storedHash = dao.findPasswordHashByUsername(user);
+            String storedHash = UserDataService.findPasswordHashByUsername(req.getServletContext(), user);
             if (storedHash != null && PasswordUtil.verify(pass, storedHash)) {
                 HttpSession session = req.getSession(true);
                 session.setAttribute("user", user);
                 session.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
 
                 // if remember checked -> create token
-                if ("on".equalsIgnoreCase(remember)) {
+                if (REMEMBER_ON.equalsIgnoreCase(remember)) {
                     String token = generateToken();
                     long nowMs = Instant.now().toEpochMilli();
                     long expiry = nowMs + REMEMBER_DAYS * 24L * 3600L * 1000L;
-                    dao.createRememberToken(token, user, expiry);
+                    UserDataService.createRememberToken(req.getServletContext(), token, user, expiry);
 
-                    Cookie cookie = new Cookie("remember", token);
+                    Cookie cookie = new Cookie(COOKIE_NAME_REMEMBER, token);
                     cookie.setHttpOnly(true);
-                    cookie.setPath(requestContext.contextPath().isEmpty() ? "/" : requestContext.contextPath());
+                    cookie.setPath(requestContext.contextPath().isEmpty() ? AppWebConstants.ROOT_PATH : requestContext.contextPath());
                     long maxAgeSeconds = Math.max(0L, (expiry - nowMs) / 1000L);
                     cookie.setMaxAge(toCookieMaxAgeSeconds(maxAgeSeconds));
                     cookie.setSecure(req.isSecure());
@@ -80,7 +78,7 @@ public class LoginServlet extends HttpServlet {
                 try {
                     resp.sendRedirect(safeRedirect);
                 } catch (IOException ex) {
-                    ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Redirect failed");
+                    ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ERROR_REDIRECT_FAILED);
                 }
                 return;
             } else {
@@ -101,7 +99,7 @@ public class LoginServlet extends HttpServlet {
             String html = TemplateRenderer.render(req.getServletContext(), LOGIN_TEMPLATE, values);
             ServletResponseUtil.writeHtml(resp, html);
         } catch (Exception ex) {
-            ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Template render error");
+            ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ERROR_TEMPLATE_RENDER);
         }
     }
 

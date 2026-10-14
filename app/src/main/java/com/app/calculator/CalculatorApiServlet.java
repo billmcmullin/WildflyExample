@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 
 import jakarta.json.Json;
 import jakarta.json.JsonException;
@@ -23,6 +24,11 @@ import com.app.util.RequestParamContext;
 @WebServlet(name = "CalculatorApiServlet", urlPatterns = {"/api/calc"})
 public class CalculatorApiServlet extends HttpServlet {
 
+    private static final String CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
+    private static final String MESSAGE_INVALID_JSON = "Invalid JSON body";
+    private static final String MESSAGE_INVALID_NUMBER = "Invalid number format";
+    private static final String MESSAGE_SERVER_ERROR = "Server error";
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         RequestParamContext requestContext = new RequestParamContext(req);
@@ -39,14 +45,21 @@ public class CalculatorApiServlet extends HttpServlet {
         String a = null, b = null, op = null;
 
         if (contentType != null && contentType.toLowerCase().contains("application/json")) {
-            try (BufferedReader reader = req.getReader();
-                 JsonReader jsonReader = Json.createReader(reader)) {
+            BufferedReader reader;
+            try {
+                reader = req.getReader();
+            } catch (IOException e) {
+                sendError(resp, MESSAGE_INVALID_JSON);
+                return;
+            }
+            try (BufferedReader safeReader = reader;
+                 JsonReader jsonReader = Json.createReader(safeReader)) {
                 JsonObject body = jsonReader.readObject();
                 a = getJsonValueAsString(body, "a");
                 b = getJsonValueAsString(body, "b");
                 op = body.containsKey("op") ? body.getString("op", null) : null;
             } catch (JsonException | IOException e) {
-                sendError(resp, "Invalid JSON body");
+                sendError(resp, MESSAGE_INVALID_JSON);
                 return;
             }
         } else {
@@ -78,7 +91,7 @@ public class CalculatorApiServlet extends HttpServlet {
     }
 
     private void processAndWriteJson(String aStr, String bStr, String op, HttpServletResponse resp) {
-        resp.setContentType("application/json;charset=UTF-8");
+        resp.setContentType(CONTENT_TYPE_JSON);
         JsonObjectBuilder jb = Json.createObjectBuilder();
 
         try {
@@ -92,11 +105,11 @@ public class CalculatorApiServlet extends HttpServlet {
 
             writeJson(resp, jb.build());
         } catch (NumberFormatException e) {
-            sendJsonFailure(resp, "Invalid number format");
+            sendJsonFailure(resp, MESSAGE_INVALID_NUMBER);
         } catch (IllegalArgumentException | ArithmeticException e) {
             sendJsonFailure(resp, e.getMessage());
         } catch (Exception e) {
-            sendJsonFailure(resp, "Server error");
+            sendJsonFailure(resp, MESSAGE_SERVER_ERROR);
         }
     }
 
@@ -110,7 +123,7 @@ public class CalculatorApiServlet extends HttpServlet {
 
     private void sendError(HttpServletResponse resp, String message) {
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        resp.setContentType("application/json;charset=UTF-8");
+        resp.setContentType(CONTENT_TYPE_JSON);
         JsonObjectBuilder jb = Json.createObjectBuilder()
                 .add("success", false)
                 .add("error", message == null ? "" : message);
@@ -118,8 +131,18 @@ public class CalculatorApiServlet extends HttpServlet {
     }
 
     private void writeJson(HttpServletResponse resp, JsonObject payload) {
+        try {
+            if (resp.getOutputStream() != null) {
+                resp.getOutputStream().write(payload.toString().getBytes(StandardCharsets.UTF_8));
+                return;
+            }
+        } catch (IOException ignored) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return;
+        }
+
         try (PrintWriter out = resp.getWriter()) {
-            Json.createWriter(out).writeObject(payload);
+            out.write(payload.toString());
         } catch (IOException ignored) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
