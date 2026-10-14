@@ -12,7 +12,6 @@
     </parent>
 
     <artifactId>selenium-cucumber-testng-tests</artifactId>
-    <packaging>jar</packaging>
 
     <name>Selenium Cucumber Browser Tests (TestNG)</name>
     <description>Separate Selenium + Cucumber (TestNG) example with Parasoft coverage integration</description>

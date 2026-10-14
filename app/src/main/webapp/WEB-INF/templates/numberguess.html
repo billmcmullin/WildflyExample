@@ -15,7 +15,7 @@
         <nav>
             <a href="{{ctx}}/home">Home</a>
             <a href="{{ctx}}/calculator">Calculator</a>
-            {{admin_link}}
+            <a href="{{admin_href}}"{{admin_style}}>Manage Users</a>
         </nav>
 
         <h1>Number Guess</h1>
@@ -34,12 +34,12 @@
 
         <section>
             <h2>Possible Candidates</h2>
-            {{candidates}}
+            <p>{{candidates_text}}</p>
         </section>
 
         <section>
             <h2>History</h2>
-            {{history}}
+            <pre class="history-text">{{history_text}}</pre>
         </section>
 
         <p>

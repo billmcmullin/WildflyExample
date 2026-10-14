@@ -1,5 +1,9 @@
 package com.app.dao;
 
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectOutputStream;
+import java.time.Instant;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -62,11 +66,14 @@ public class UserDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     long expiry = rs.getLong("expiry_ms");
-                    if (expiry >= System.currentTimeMillis()) {
+                    if (expiry >= Instant.now().toEpochMilli()) {
                         return rs.getString("username");
                     } else {
                         // expired -> cleanup
-                        deleteRememberToken(token);
+                        boolean removed = deleteRememberToken(token);
+                        if (!removed) {
+                            // token already removed or missing
+                        }
                     }
                 }
                 return null;
@@ -90,8 +97,12 @@ public class UserDao {
 
     public void cleanExpiredTokens() throws Exception {
         try (Connection c = ds.getConnection(); PreparedStatement ps = c.prepareStatement("DELETE FROM remember_tokens WHERE expiry_ms < ?")) {
-            ps.setLong(1, System.currentTimeMillis());
+            ps.setLong(1, Instant.now().toEpochMilli());
             ps.executeUpdate();
         }
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        throw new NotSerializableException("UserDao");
     }
 }
