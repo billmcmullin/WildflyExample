@@ -1,6 +1,8 @@
 package com.app.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 /**
  * Parasoft Jtest UTA: Test class for PasswordUtil
@@ -25,7 +27,8 @@ public class PasswordUtilTest
         String result = PasswordUtil.hashPassword(password);
 
         // Then - assertions for result of method hashPassword(String)
-        assertEquals("5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8", result);
+        assertTrue(result.startsWith("p1$"));
+        assertTrue(PasswordUtil.verify(password, result));
 
     }
 
@@ -40,8 +43,11 @@ public class PasswordUtilTest
     {
         // When
         String plain = "plain"; // UTA: default value
-        String hash = "hash"; // UTA: default value
-        boolean result = PasswordUtil.verify(plain, hash);
+        String hash = PasswordUtil.hashPassword(plain);
+
+        // Then
+        assertTrue(PasswordUtil.verify(plain, hash));
+        assertFalse(PasswordUtil.verify("wrong", hash));
 
     }
 

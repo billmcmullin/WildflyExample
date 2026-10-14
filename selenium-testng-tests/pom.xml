@@ -12,7 +12,6 @@
     </parent>
 
     <artifactId>selenium-testng-tests</artifactId>
-    <packaging>jar</packaging>
 
     <name>Selenium Browser Tests (TestNG)</name>
     <description>Browser tests configured for Parasoft coverage collection</description>

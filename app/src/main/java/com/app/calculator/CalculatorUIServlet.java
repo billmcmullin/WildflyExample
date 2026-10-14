@@ -1,7 +1,6 @@
 package com.app.calculator;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +8,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import com.app.dao.UserDao;
+import com.app.util.RequestParamContext;
+import com.app.util.ServletResponseUtil;
 import com.app.util.TemplateRenderer;
 
 import jakarta.servlet.ServletException;
@@ -23,9 +24,11 @@ public class CalculatorUIServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String a = req.getParameter("a");
-        String b = req.getParameter("b");
-        String op = req.getParameter("op");
+        RequestParamContext requestContext = new RequestParamContext(req);
+
+        String a = requestContext.value("a");
+        String b = requestContext.value("b");
+        String op = requestContext.value("op");
         String message = null;
         String result = null;
 
@@ -44,7 +47,7 @@ public class CalculatorUIServlet extends HttpServlet {
             }
         }
 
-        String ctx = req.getContextPath(); // "/app"
+        String ctx = requestContext.contextPath();
 
         // Get the signed-in username from session (if any)
         String user = "";
@@ -57,7 +60,7 @@ public class CalculatorUIServlet extends HttpServlet {
         }
 
         // Determine admin link if the user is an ADMIN
-        String adminLink = "";
+        boolean showAdminLink = false;
         if (!user.isEmpty()) {
             try {
                 DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
@@ -65,7 +68,7 @@ public class CalculatorUIServlet extends HttpServlet {
                     UserDao dao = new UserDao(ds);
                     String role = dao.findRoleByUsername(user);
                     if ("ADMIN".equalsIgnoreCase(role)) {
-                        adminLink = "<a href=\"" + req.getContextPath() + "/admin/users\">Manage Users</a>";
+                        showAdminLink = true;
                     }
                 }
             } catch (Exception ignored) {
@@ -76,7 +79,8 @@ public class CalculatorUIServlet extends HttpServlet {
         Map<String, String> vals = new HashMap<>();
         vals.put("ctx", TemplateRenderer.escapeHtml(ctx));
         vals.put("user", TemplateRenderer.escapeHtml(user));
-        vals.put("admin_link", adminLink);
+        vals.put("admin_href", TemplateRenderer.escapeHtml(requestContext.appPath("/admin/users")));
+        vals.put("admin_style", showAdminLink ? "" : " style=\"display:none\"");
 
         vals.put("a", TemplateRenderer.escapeHtml(a != null ? a : "2"));
         vals.put("b", TemplateRenderer.escapeHtml(b != null ? b : "3"));
@@ -86,18 +90,20 @@ public class CalculatorUIServlet extends HttpServlet {
         vals.put("op_mul", "mul".equals(op) ? " selected" : "");
         vals.put("op_div", "div".equals(op) ? " selected" : "");
 
-        String resultBlock = "";
+        String resultText = "";
         if (message != null) {
-            resultBlock = "<div class=\"result\">Error: " + TemplateRenderer.escapeHtml(message) + "</div>";
+            resultText = "Error: " + message;
         } else if (result != null) {
-            resultBlock = "<div class=\"result\">Result: " + TemplateRenderer.escapeHtml(result) + "</div>";
+            resultText = "Result: " + result;
         }
-        vals.put("result_block", resultBlock);
+        vals.put("result_text", TemplateRenderer.escapeHtml(resultText));
 
-        String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/calculator.html", vals);
-        resp.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = resp.getWriter()) {
-            out.write(html);
+        String html;
+        try {
+            html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/calculator.html", vals);
+        } catch (IOException ex) {
+            throw ex;
         }
+        ServletResponseUtil.writeHtml(resp, html);
     }
 }

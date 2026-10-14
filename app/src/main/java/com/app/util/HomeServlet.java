@@ -20,7 +20,8 @@ public class HomeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String ctxPath = req.getContextPath(); // e.g. "/app"
+        RequestParamContext requestContext = new RequestParamContext(req);
+        String ctxPath = requestContext.contextPath();
 
         // Safely obtain username from session (may be null)
         String user = "";
@@ -31,7 +32,7 @@ public class HomeServlet extends HttpServlet {
         }
 
         // Determine admin link if the user is an ADMIN
-        String adminLink = "";
+        boolean showAdminLink = false;
         if (!user.isEmpty()) {
             try {
                 DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
@@ -39,7 +40,7 @@ public class HomeServlet extends HttpServlet {
                     UserDao dao = new UserDao(ds);
                     String role = dao.findRoleByUsername(user);
                     if ("ADMIN".equalsIgnoreCase(role)) {
-                        adminLink = "<a href=\"" + req.getContextPath() + "/admin/users\">Manage Users</a>";
+                        showAdminLink = true;
                     }
                 }
             } catch (Exception ignored) {
@@ -50,11 +51,15 @@ public class HomeServlet extends HttpServlet {
         Map<String, String> vals = new HashMap<>();
         vals.put("ctx", TemplateRenderer.escapeHtml(ctxPath));
         vals.put("user", TemplateRenderer.escapeHtml(user));
-        // admin_link contains HTML; do not escape here so template renders link markup
-        vals.put("admin_link", adminLink);
+        vals.put("admin_href", TemplateRenderer.escapeHtml(requestContext.appPath("/admin/users")));
+        vals.put("admin_style", showAdminLink ? "" : " style=\"display:none\"");
 
-        String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/home.html", vals);
-        resp.setContentType("text/html;charset=UTF-8");
-        resp.getWriter().write(html);
+        String html;
+        try {
+            html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/home.html", vals);
+        } catch (IOException ex) {
+            throw ex;
+        }
+        ServletResponseUtil.writeHtml(resp, html);
     }
 }

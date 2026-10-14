@@ -1,5 +1,8 @@
 package com.app.calculator;
 
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -30,5 +33,9 @@ public class CalculatorService {
             default:
                 throw new IllegalArgumentException("Unknown operation: " + op);
         }
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        throw new NotSerializableException("CalculatorService");
     }
 }

@@ -1,8 +1,9 @@
 package com.app.admin;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import javax.sql.DataSource;
 
@@ -22,6 +23,13 @@ import jakarta.servlet.http.HttpSession;
 public class AuthFilter implements Filter {
 
     private static final int SESSION_TIMEOUT_SECONDS = 30 * 60; // must match LoginServlet
+    private static final long serialVersionUID = 1L;
+    private static final String PATH_LOGIN = "/login";
+    private static final String PATH_STATIC = "/static";
+    private static final String PATH_MVNW = "/mvnw";
+    private static final String SESSION_USER = "user";
+    private static final String REMEMBER_COOKIE = "remember";
+    private static final String CONTEXT_DATASOURCE = "datasource";
 
     @Override
     public void doFilter(ServletRequest sreq, ServletResponse sres, FilterChain chain) throws IOException, ServletException {
@@ -33,20 +41,23 @@ public class AuthFilter implements Filter {
         String path = uri.substring(ctx.length());
 
         // Allow login page, static resources, and HSQLDB console if needed
-        if (path.startsWith("/login") || path.startsWith("/static/") || path.startsWith("/mvnw") || path.startsWith("/static")) {
+        if (path.startsWith(PATH_LOGIN)
+            || path.startsWith(PATH_STATIC + "/")
+            || path.startsWith(PATH_MVNW)
+            || path.startsWith(PATH_STATIC)) {
             chain.doFilter(sreq, sres);
             return;
         }
 
         HttpSession session = req.getSession(false);
-        boolean loggedIn = session != null && session.getAttribute("user") != null;
+        boolean loggedIn = session != null && session.getAttribute(SESSION_USER) != null;
 
         if (!loggedIn) {
             // try "remember" cookie
             String rememberToken = null;
             if (req.getCookies() != null) {
                 for (jakarta.servlet.http.Cookie c : req.getCookies()) {
-                    if ("remember".equals(c.getName()) && c.getValue() != null && !c.getValue().isBlank()) {
+                    if (REMEMBER_COOKIE.equals(c.getName()) && c.getValue() != null && !c.getValue().isBlank()) {
                         rememberToken = c.getValue();
                         break;
                     }
@@ -55,14 +66,14 @@ public class AuthFilter implements Filter {
 
             if (rememberToken != null) {
                 try {
-                    DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
+                    DataSource ds = (DataSource) req.getServletContext().getAttribute(CONTEXT_DATASOURCE);
                     if (ds != null) {
                         UserDao dao = new UserDao(ds);
                         String username = dao.findUsernameByToken(rememberToken);
                         if (username != null) {
                             // auto-login
                             HttpSession newSession = req.getSession(true);
-                            newSession.setAttribute("user", username);
+                            newSession.setAttribute(SESSION_USER, username);
                             newSession.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
                             // optionally refresh token expiry (not done here)
                             chain.doFilter(sreq, sres);
@@ -73,13 +84,19 @@ public class AuthFilter implements Filter {
                 }
             }
 
-            // redirect to login preserving original URL
-            String redirect = uri;
-            String target = ctx + "/login?redirect=" + URLEncoder.encode(redirect, StandardCharsets.UTF_8.name());
-            resp.sendRedirect(target);
+            // redirect to login
+            resp.sendRedirect(PATH_LOGIN);
             return;
         }
 
         chain.doFilter(sreq, sres);
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        throw new NotSerializableException("AuthFilter");
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException {
+        throw new NotSerializableException("AuthFilter");
     }
 }

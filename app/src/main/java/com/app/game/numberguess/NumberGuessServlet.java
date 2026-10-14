@@ -1,6 +1,8 @@
 package com.app.game.numberguess;
 
 import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -8,6 +10,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import javax.sql.DataSource;
 
 import com.app.dao.UserDao;
+import com.app.util.RequestParamContext;
+import com.app.util.ServletResponseUtil;
 import com.app.util.TemplateRenderer;
 
 import jakarta.servlet.ServletException;
@@ -19,6 +23,8 @@ import jakarta.servlet.http.HttpSession;
 
 @WebServlet(name = "NumberGuessServlet", urlPatterns = {"/numberguess"})
 public class NumberGuessServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
 
     private static final String ATTR_SECRET = "ng.secret";
     private static final String ATTR_LOW = "ng.low";
@@ -34,10 +40,11 @@ public class NumberGuessServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        RequestParamContext requestContext = new RequestParamContext(req);
         HttpSession session = req.getSession(true);
 
         // If new game requested or not initialized, start a new game
-        if ("1".equals(req.getParameter("new")) || session.getAttribute(ATTR_SECRET) == null) {
+        if ("1".equals(requestContext.value("new")) || session.getAttribute(ATTR_SECRET) == null) {
             initNewGame(session);
         }
 
@@ -49,31 +56,32 @@ public class NumberGuessServlet extends HttpServlet {
         String message = (String) session.getAttribute(ATTR_MESSAGE);
         boolean over = session.getAttribute(ATTR_OVER) != null && (boolean) session.getAttribute(ATTR_OVER);
 
-        // Build candidate display: if small range, show explicit list; otherwise show range + count
-        String candidatesHtml;
+        // Build candidate display: if small range, show explicit list; otherwise show range + count.
+        String candidatesText;
         int count = Math.max(0, high - low + 1);
         if (count <= 30) {
             StringBuilder sb = new StringBuilder();
-            sb.append("<p>Possible numbers (").append(count).append("): ");
+            sb.append("Possible numbers (").append(count).append("): ");
             for (int i = low; i <= high; i++) {
                 if (i > low) {
-                    sb.append(", ");
+                    sb.append(",");
+                    sb.append(' ');
                 }
                 sb.append(i);
             }
-            sb.append("</p>");
-            candidatesHtml = sb.toString();
+            candidatesText = sb.toString();
         } else {
-            candidatesHtml = "<p>Possible numbers: [" + low + "," + high + "] (" + count + " candidates)</p>";
+            candidatesText = "Possible numbers: [" + low + "," + high + "] (" + count + " candidates)";
         }
 
-        StringBuilder historyHtml = new StringBuilder();
+        StringBuilder historyText = new StringBuilder();
         if (history != null && !history.isEmpty()) {
-            historyHtml.append("<ul>");
             for (String h : history) {
-                historyHtml.append("<li>").append(TemplateRenderer.escapeHtml(h)).append("</li>");
+                if (!historyText.isEmpty()) {
+                    historyText.append('\n');
+                }
+                historyText.append("- ").append(h);
             }
-            historyHtml.append("</ul>");
         }
 
         // Get current user for header
@@ -87,7 +95,7 @@ public class NumberGuessServlet extends HttpServlet {
         }
 
         // Determine admin link if the user is an ADMIN
-        String adminLink = "";
+        boolean showAdminLink = false;
         if (!user.isEmpty()) {
             try {
                 DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
@@ -95,7 +103,7 @@ public class NumberGuessServlet extends HttpServlet {
                     UserDao dao = new UserDao(ds);
                     String role = dao.findRoleByUsername(user);
                     if ("ADMIN".equalsIgnoreCase(role)) {
-                        adminLink = "<a href=\"" + req.getContextPath() + "/admin/users\">Manage Users</a>";
+                        showAdminLink = true;
                     }
                 }
             } catch (Exception ignored) {
@@ -104,38 +112,44 @@ public class NumberGuessServlet extends HttpServlet {
         }
 
         java.util.Map<String, String> vals = new java.util.HashMap<>();
-        vals.put("ctx", TemplateRenderer.escapeHtml(req.getContextPath()));
+        vals.put("ctx", TemplateRenderer.escapeHtml(requestContext.contextPath()));
         vals.put("user", TemplateRenderer.escapeHtml(user));
-        vals.put("admin_link", adminLink);
+        vals.put("admin_href", TemplateRenderer.escapeHtml(requestContext.appPath("/admin/users")));
+        vals.put("admin_style", showAdminLink ? "" : " style=\"display:none\"");
         vals.put("low", String.valueOf(low));
         vals.put("high", String.valueOf(high));
         vals.put("remaining", String.valueOf(remaining));
         vals.put("message", message != null ? TemplateRenderer.escapeHtml(message) : "");
-        vals.put("history", historyHtml.toString());
+        vals.put("history_text", TemplateRenderer.escapeHtml(historyText.toString()));
 
         // Pre-fill last guess if available
         String last = (String) session.getAttribute("ng.lastGuess");
         vals.put("guess_value", last != null ? TemplateRenderer.escapeHtml(last) : "");
 
         vals.put("game_over", over ? "true" : "false");
-        vals.put("candidates", candidatesHtml);
+        vals.put("candidates_text", TemplateRenderer.escapeHtml(candidatesText));
 
-        String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/numberguess.html", vals);
-        resp.setContentType("text/html;charset=UTF-8");
-        resp.getWriter().write(html);
+        String html;
+        try {
+            html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/numberguess.html", vals);
+        } catch (IOException ex) {
+            throw ex;
+        }
+        ServletResponseUtil.writeHtml(resp, html);
 
         // Clear transient message after showing
         session.removeAttribute(ATTR_MESSAGE);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+        RequestParamContext requestContext = new RequestParamContext(req);
         HttpSession session = req.getSession(true);
 
         // start new game if requested
-        if ("1".equals(req.getParameter("new"))) {
+        if ("1".equals(requestContext.value("new"))) {
             initNewGame(session);
-            resp.sendRedirect(req.getContextPath() + "/numberguess");
+            safeRedirect(resp);
             return;
         }
 
@@ -146,11 +160,11 @@ public class NumberGuessServlet extends HttpServlet {
 
         if (session.getAttribute(ATTR_OVER) != null && (boolean) session.getAttribute(ATTR_OVER)) {
             // Game already over — redirect to GET (user can start new game)
-            resp.sendRedirect(req.getContextPath() + "/numberguess");
+            safeRedirect(resp);
             return;
         }
 
-        String guessParam = req.getParameter("guess");
+        String guessParam = requestContext.value("guess");
         int secret = (int) session.getAttribute(ATTR_SECRET);
         int low = (int) session.getAttribute(ATTR_LOW);
         int high = (int) session.getAttribute(ATTR_HIGH);
@@ -165,7 +179,7 @@ public class NumberGuessServlet extends HttpServlet {
 
         if (guessParam == null || guessParam.isBlank()) {
             session.setAttribute(ATTR_MESSAGE, "Please enter a number.");
-            resp.sendRedirect(req.getContextPath() + "/numberguess");
+            safeRedirect(resp);
             return;
         }
 
@@ -174,13 +188,13 @@ public class NumberGuessServlet extends HttpServlet {
             guess = Integer.parseInt(guessParam.trim());
         } catch (NumberFormatException e) {
             session.setAttribute(ATTR_MESSAGE, "Invalid number format.");
-            resp.sendRedirect(req.getContextPath() + "/numberguess");
+            safeRedirect(resp);
             return;
         }
 
         if (guess < MIN || guess > MAX) {
             session.setAttribute(ATTR_MESSAGE, "Guess must be between " + MIN + " and " + MAX + ".");
-            resp.sendRedirect(req.getContextPath() + "/numberguess");
+            safeRedirect(resp);
             return;
         }
 
@@ -194,7 +208,7 @@ public class NumberGuessServlet extends HttpServlet {
             history.add("Guess " + guess + " — Correct! You win.");
             session.setAttribute(ATTR_MESSAGE, "Correct! The number was " + secret + ". You win!");
             session.setAttribute(ATTR_OVER, true);
-            resp.sendRedirect(req.getContextPath() + "/numberguess");
+            safeRedirect(resp);
             return;
         }
 
@@ -231,7 +245,7 @@ public class NumberGuessServlet extends HttpServlet {
         }
 
         // Redirect to GET to show results and avoid form re-submission
-        resp.sendRedirect(req.getContextPath() + "/numberguess");
+        safeRedirect(resp);
     }
 
     private void initNewGame(HttpSession session) {
@@ -244,5 +258,17 @@ public class NumberGuessServlet extends HttpServlet {
         session.setAttribute(ATTR_MESSAGE, null);
         session.setAttribute(ATTR_OVER, true);
         session.removeAttribute("ng.lastGuess");
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException {
+        throw new NotSerializableException("NumberGuessServlet");
+    }
+
+    private static void safeRedirect(HttpServletResponse resp) {
+        try {
+            resp.sendRedirect("/numberguess");
+        } catch (IOException ex) {
+            ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Redirect failed");
+        }
     }
 }

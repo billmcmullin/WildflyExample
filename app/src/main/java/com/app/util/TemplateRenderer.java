@@ -11,6 +11,10 @@ import jakarta.servlet.ServletContext;
 
 public final class TemplateRenderer {
 
+    private static final String TEMPLATE_PREFIX = "{{";
+    private static final String TEMPLATE_SUFFIX = "}}";
+    private static final String EMPTY = "";
+
     private TemplateRenderer() {
     }
 
@@ -31,7 +35,8 @@ public final class TemplateRenderer {
             String out = sb.toString();
             if (values != null) {
                 for (Map.Entry<String, String> e : values.entrySet()) {
-                    out = out.replace("{{" + e.getKey() + "}}", e.getValue() == null ? "" : e.getValue());
+                    String placeholder = TEMPLATE_PREFIX + e.getKey() + TEMPLATE_SUFFIX;
+                    out = out.replace(placeholder, e.getValue() == null ? EMPTY : e.getValue());
                 }
             }
             return out;
@@ -41,10 +46,32 @@ public final class TemplateRenderer {
 // Basic HTML escaper
     public static String escapeHtml(String s) {
         if (s == null) {
-            return "";
+            return EMPTY;
         }
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                .replace("\"", "&quot;").replace("'", "&#39;");
+        StringBuilder out = new StringBuilder(s.length() + 16);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '&':
+                    out.append("&amp;");
+                    break;
+                case '<':
+                    out.append("&lt;");
+                    break;
+                case '>':
+                    out.append("&gt;");
+                    break;
+                case '"':
+                    out.append("&quot;");
+                    break;
+                case '\'':
+                    out.append("&#39;");
+                    break;
+                default:
+                    out.append(c);
+            }
+        }
+        return out.toString();
     }
 
 }
