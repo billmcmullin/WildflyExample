@@ -62,6 +62,7 @@ public class DatabaseInitListener implements ServletContextListener {
     private static final String LOG_ADMIN_CREATED = "DatabaseInitListener: created default admin user";
     private static final String LOG_SCHEMA_INIT_FAIL = "DatabaseInitListener: failed to initialize database schema: ";
     private static final String LOG_SEPARATOR = " - ";
+    private static final String CLASS_NAME = "DatabaseInitListener";
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -132,7 +133,7 @@ public class DatabaseInitListener implements ServletContextListener {
         // nothing special to do for file-based HSQLDB here
     }
 
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        throw new NotSerializableException("DatabaseInitListener");
+    private final void writeObject(ObjectOutputStream out) throws IOException {
+        throw new NotSerializableException(CLASS_NAME);
     }
 }

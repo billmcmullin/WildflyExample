@@ -12,6 +12,11 @@ import javax.sql.DataSource;
 
 public class UserDao {
 
+    private static final String ROLE_USER = "USER";
+    private static final String COLUMN_EXPIRY_MS = "expiry_ms";
+    private static final String COLUMN_USERNAME = "username";
+    private static final String CLASS_NAME = "UserDao";
+
     private final DataSource ds;
 
     public UserDao(DataSource ds) {
@@ -46,7 +51,7 @@ public class UserDao {
         try (Connection c = ds.getConnection(); PreparedStatement ps = c.prepareStatement("INSERT INTO users(username, password_hash, role) VALUES(?, ?, ?)")) {
             ps.setString(1, username);
             ps.setString(2, passwordHash);
-            ps.setString(3, role != null ? role : "USER");
+            ps.setString(3, role != null ? role : ROLE_USER);
             return ps.executeUpdate() == 1;
         }
     }
@@ -65,9 +70,9 @@ public class UserDao {
             ps.setString(1, token);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    long expiry = rs.getLong("expiry_ms");
+                    long expiry = rs.getLong(COLUMN_EXPIRY_MS);
                     if (expiry >= Instant.now().toEpochMilli()) {
-                        return rs.getString("username");
+                        return rs.getString(COLUMN_USERNAME);
                     } else {
                         // expired -> cleanup
                         boolean removed = deleteRememberToken(token);
@@ -102,7 +107,7 @@ public class UserDao {
         }
     }
 
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        throw new NotSerializableException("UserDao");
+    private final void writeObject(ObjectOutputStream out) throws IOException {
+        throw new NotSerializableException(CLASS_NAME);
     }
 }

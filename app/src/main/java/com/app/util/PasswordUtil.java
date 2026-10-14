@@ -9,6 +9,11 @@ public final class PasswordUtil {
 
     private static final String HASH_ALGO = "PBKDF2WithHmacSHA256";
     private static final String VERSION_PREFIX = "p1$";
+    private static final char PART_SEPARATOR = '$';
+    private static final String SPLIT_SEPARATOR_REGEX = "\\$";
+    private static final String ERROR_HASHING_FAILED = "Password hashing failed";
+    private static final String ERROR_INVALID_HEX_LENGTH = "Invalid hex length";
+    private static final String ERROR_INVALID_HEX_VALUE = "Invalid hex value";
     private static final int SALT_BYTES = 16;
     private static final int DEFAULT_ITERATIONS = 120000;
     private static final int KEY_LENGTH_BITS = 256;
@@ -21,14 +26,14 @@ public final class PasswordUtil {
         byte[] salt = new byte[SALT_BYTES];
         RANDOM.nextBytes(salt);
         byte[] derived = derive(password, salt, DEFAULT_ITERATIONS, KEY_LENGTH_BITS);
-        return VERSION_PREFIX + DEFAULT_ITERATIONS + "$" + toHex(salt) + "$" + toHex(derived);
+        return VERSION_PREFIX + DEFAULT_ITERATIONS + PART_SEPARATOR + toHex(salt) + PART_SEPARATOR + toHex(derived);
     }
 
     public static boolean verify(String plain, String hash) {
         if (plain == null || hash == null || hash.isBlank() || !hash.startsWith(VERSION_PREFIX)) {
             return false;
         }
-        String[] parts = hash.split("\\$", 4);
+        String[] parts = hash.split(SPLIT_SEPARATOR_REGEX, 4);
         if (parts.length != 4 || parts[1].isBlank() || parts[2].isBlank() || parts[3].isBlank()) {
             return false;
         }
@@ -49,7 +54,7 @@ public final class PasswordUtil {
             SecretKeyFactory skf = SecretKeyFactory.getInstance(HASH_ALGO);
             return skf.generateSecret(spec).getEncoded();
         } catch (Exception e) {
-            throw new IllegalStateException("Password hashing failed", e);
+            throw new IllegalStateException(ERROR_HASHING_FAILED, e);
         }
     }
 
@@ -68,16 +73,16 @@ public final class PasswordUtil {
     private static byte[] fromHex(String hex) {
         int length = hex.length();
         if ((length & 1) == 1) {
-            throw new IllegalArgumentException("Invalid hex length");
+            throw new IllegalArgumentException(ERROR_INVALID_HEX_LENGTH);
         }
         byte[] out = new byte[length / 2];
         for (int i = 0; i < out.length; i++) {
             int hi = Character.digit(hex.charAt(i * 2), 16);
             int lo = Character.digit(hex.charAt(i * 2 + 1), 16);
             if (hi < 0 || lo < 0) {
-                throw new IllegalArgumentException("Invalid hex value");
+                throw new IllegalArgumentException(ERROR_INVALID_HEX_VALUE);
             }
-            out[i] = (byte) ((hi << 4) + lo);
+            out[i] = Integer.valueOf((hi << 4) + lo).byteValue();
         }
         return out;
     }

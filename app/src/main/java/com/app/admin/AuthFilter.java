@@ -5,9 +5,8 @@ import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import javax.sql.DataSource;
-
-import com.app.dao.UserDao;
+import com.app.util.AppWebConstants;
+import com.app.util.UserDataService;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -19,7 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebFilter("/*")
+@WebFilter(AppWebConstants.FILTER_ALL)
 public class AuthFilter implements Filter {
 
     private static final int SESSION_TIMEOUT_SECONDS = 30 * 60; // must match LoginServlet
@@ -27,9 +26,9 @@ public class AuthFilter implements Filter {
     private static final String PATH_LOGIN = "/login";
     private static final String PATH_STATIC = "/static";
     private static final String PATH_MVNW = "/mvnw";
-    private static final String SESSION_USER = "user";
     private static final String REMEMBER_COOKIE = "remember";
-    private static final String CONTEXT_DATASOURCE = "datasource";
+    private static final String CLASS_NAME = "AuthFilter";
+    private static final char PATH_SEPARATOR = '/';
 
     @Override
     public void doFilter(ServletRequest sreq, ServletResponse sres, FilterChain chain) throws IOException, ServletException {
@@ -42,7 +41,7 @@ public class AuthFilter implements Filter {
 
         // Allow login page, static resources, and HSQLDB console if needed
         if (path.startsWith(PATH_LOGIN)
-            || path.startsWith(PATH_STATIC + "/")
+            || path.startsWith(PATH_STATIC + PATH_SEPARATOR)
             || path.startsWith(PATH_MVNW)
             || path.startsWith(PATH_STATIC)) {
             chain.doFilter(sreq, sres);
@@ -50,7 +49,7 @@ public class AuthFilter implements Filter {
         }
 
         HttpSession session = req.getSession(false);
-        boolean loggedIn = session != null && session.getAttribute(SESSION_USER) != null;
+        boolean loggedIn = session != null && session.getAttribute(UserDataService.SESSION_USER) != null;
 
         if (!loggedIn) {
             // try "remember" cookie
@@ -66,19 +65,15 @@ public class AuthFilter implements Filter {
 
             if (rememberToken != null) {
                 try {
-                    DataSource ds = (DataSource) req.getServletContext().getAttribute(CONTEXT_DATASOURCE);
-                    if (ds != null) {
-                        UserDao dao = new UserDao(ds);
-                        String username = dao.findUsernameByToken(rememberToken);
-                        if (username != null) {
-                            // auto-login
-                            HttpSession newSession = req.getSession(true);
-                            newSession.setAttribute(SESSION_USER, username);
-                            newSession.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
-                            // optionally refresh token expiry (not done here)
-                            chain.doFilter(sreq, sres);
-                            return;
-                        }
+                    String username = UserDataService.findUsernameByToken(req.getServletContext(), rememberToken);
+                    if (username != null) {
+                        // auto-login
+                        HttpSession newSession = req.getSession(true);
+                        newSession.setAttribute(UserDataService.SESSION_USER, username);
+                        newSession.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
+                        // optionally refresh token expiry (not done here)
+                        chain.doFilter(sreq, sres);
+                        return;
                     }
                 } catch (Exception ignored) {
                 }
@@ -92,11 +87,11 @@ public class AuthFilter implements Filter {
         chain.doFilter(sreq, sres);
     }
 
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        throw new NotSerializableException("AuthFilter");
+    private final void writeObject(ObjectOutputStream out) throws IOException {
+        throw new NotSerializableException(CLASS_NAME);
     }
 
-    private void readObject(ObjectInputStream in) throws IOException {
-        throw new NotSerializableException("AuthFilter");
+    private final void readObject(ObjectInputStream in) throws IOException {
+        throw new NotSerializableException(CLASS_NAME);
     }
 }

@@ -12,17 +12,20 @@ public final class ServletResponseUtil {
     private static final Logger LOGGER = Logger.getLogger("com.app.util.ServletResponseUtil");
     private static final String HTML_CONTENT_TYPE = "text/html;charset=UTF-8";
     private static final String EMPTY = "";
+    private static final String LOG_WRITE_FAILED = "Failed to write HTML response";
+    private static final String LOG_SEND_ERROR_FAILED = "Failed to send error response";
+    private static final String ERROR_RESPONSE_WRITE = "Response write error";
 
     private ServletResponseUtil() {
     }
 
-    public static void writeHtml(HttpServletResponse resp, String html) {
-        resp.setContentType(HTML_CONTENT_TYPE);
+    public static void writeHtml(HttpServletResponse response, String body) {
+        response.setContentType(HTML_CONTENT_TYPE);
         try {
-            resp.getOutputStream().write((html == null ? EMPTY : html).getBytes(StandardCharsets.UTF_8));
+            response.getOutputStream().write((body == null ? EMPTY : body).getBytes(StandardCharsets.UTF_8));
         } catch (IOException ex) {
-            LOGGER.log(Level.WARNING, "Failed to write HTML response", ex);
-            sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
+            LOGGER.log(Level.WARNING, LOG_WRITE_FAILED, ex);
+            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ERROR_RESPONSE_WRITE);
         }
     }
 
@@ -38,7 +41,7 @@ public final class ServletResponseUtil {
                 resp.sendError(statusCode, message);
             }
         } catch (IOException ex) {
-            LOGGER.log(Level.WARNING, "Failed to send error response", ex);
+            LOGGER.log(Level.WARNING, LOG_SEND_ERROR_FAILED, ex);
             resp.setStatus(statusCode);
         }
     }

@@ -7,12 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.sql.DataSource;
-
-import com.app.dao.UserDao;
 import com.app.util.RequestParamContext;
 import com.app.util.ServletResponseUtil;
 import com.app.util.TemplateRenderer;
+import com.app.util.UserDataService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -64,14 +62,14 @@ public class NumberGuessServlet extends HttpServlet {
             sb.append("Possible numbers (").append(count).append("): ");
             for (int i = low; i <= high; i++) {
                 if (i > low) {
-                    sb.append(",");
+                    sb.append(',');
                     sb.append(' ');
                 }
                 sb.append(i);
             }
             candidatesText = sb.toString();
         } else {
-            candidatesText = "Possible numbers: [" + low + "," + high + "] (" + count + " candidates)";
+            candidatesText = "Possible numbers: [" + low + ',' + high + "] (" + count + " candidates)";
         }
 
         StringBuilder historyText = new StringBuilder();
@@ -85,31 +83,10 @@ public class NumberGuessServlet extends HttpServlet {
         }
 
         // Get current user for header
-        String user = "";
-        HttpSession sess = req.getSession(false);
-        if (sess != null) {
-            Object u = sess.getAttribute("user");
-            if (u != null) {
-                user = u.toString();
-            }
-        }
+        String user = UserDataService.currentUser(req);
 
         // Determine admin link if the user is an ADMIN
-        boolean showAdminLink = false;
-        if (!user.isEmpty()) {
-            try {
-                DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
-                if (ds != null) {
-                    UserDao dao = new UserDao(ds);
-                    String role = dao.findRoleByUsername(user);
-                    if ("ADMIN".equalsIgnoreCase(role)) {
-                        showAdminLink = true;
-                    }
-                }
-            } catch (Exception ignored) {
-                // ignore and do not show admin link
-            }
-        }
+        boolean showAdminLink = UserDataService.isAdmin(req.getServletContext(), user);
 
         java.util.Map<String, String> vals = new java.util.HashMap<>();
         vals.put("ctx", TemplateRenderer.escapeHtml(requestContext.contextPath()));
@@ -129,12 +106,7 @@ public class NumberGuessServlet extends HttpServlet {
         vals.put("game_over", over ? "true" : "false");
         vals.put("candidates_text", TemplateRenderer.escapeHtml(candidatesText));
 
-        String html;
-        try {
-            html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/numberguess.html", vals);
-        } catch (IOException ex) {
-            throw ex;
-        }
+        String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/numberguess.html", vals);
         ServletResponseUtil.writeHtml(resp, html);
 
         // Clear transient message after showing
@@ -193,7 +165,7 @@ public class NumberGuessServlet extends HttpServlet {
         }
 
         if (guess < MIN || guess > MAX) {
-            session.setAttribute(ATTR_MESSAGE, "Guess must be between " + MIN + " and " + MAX + ".");
+            session.setAttribute(ATTR_MESSAGE, "Guess must be between " + MIN + " and " + MAX + '.');
             safeRedirect(resp);
             return;
         }
@@ -219,14 +191,14 @@ public class NumberGuessServlet extends HttpServlet {
             if (newLow > low) {
                 low = newLow;
             }
-            history.add("Guess " + guess + " — Too low. New possible range: [" + low + "," + high + "].");
+            history.add("Guess " + guess + " — Too low. New possible range: [" + low + ',' + high + "].");
         } else {
             // guessed too high -> new high is guess - 1
             int newHigh = guess - 1;
             if (newHigh < high) {
                 high = newHigh;
             }
-            history.add("Guess " + guess + " — Too high. New possible range: [" + low + "," + high + "].");
+            history.add("Guess " + guess + " — Too high. New possible range: [" + low + ',' + high + "].");
         }
 
         // Keep bounds within [MIN,MAX]
@@ -238,7 +210,7 @@ public class NumberGuessServlet extends HttpServlet {
         session.setAttribute(ATTR_HISTORY, history);
 
         if (remaining <= 0) {
-            session.setAttribute(ATTR_MESSAGE, "Out of guesses. The number was " + secret + ".");
+            session.setAttribute(ATTR_MESSAGE, "Out of guesses. The number was " + secret + '.');
             session.setAttribute(ATTR_OVER, true);
         } else {
             session.setAttribute(ATTR_MESSAGE, "Try a " + (guess < secret ? "higher" : "lower") + " number.");

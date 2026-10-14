@@ -14,6 +14,12 @@ public final class TemplateRenderer {
     private static final String TEMPLATE_PREFIX = "{{";
     private static final String TEMPLATE_SUFFIX = "}}";
     private static final String EMPTY = "";
+    private static final String ERROR_TEMPLATE_NOT_FOUND = "Template not found: ";
+    private static final String HTML_ESCAPE_AMP = "&amp;";
+    private static final String HTML_ESCAPE_LT = "&lt;";
+    private static final String HTML_ESCAPE_GT = "&gt;";
+    private static final String HTML_ESCAPE_QUOTE = "&quot;";
+    private static final String HTML_ESCAPE_APOS = "&#39;";
 
     private TemplateRenderer() {
     }
@@ -23,7 +29,7 @@ public final class TemplateRenderer {
         // templatePath example: "/WEB-INF/templates/home.html"
         try (InputStream is = ctx.getResourceAsStream(templatePath)) {
             if (is == null) {
-                throw new IOException("Template not found: " + templatePath);
+                throw new IOException(ERROR_TEMPLATE_NOT_FOUND + templatePath);
             }
             StringBuilder sb = new StringBuilder();
             try (BufferedReader r = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
@@ -53,19 +59,19 @@ public final class TemplateRenderer {
             char c = s.charAt(i);
             switch (c) {
                 case '&':
-                    out.append("&amp;");
+                    out.append(HTML_ESCAPE_AMP);
                     break;
                 case '<':
-                    out.append("&lt;");
+                    out.append(HTML_ESCAPE_LT);
                     break;
                 case '>':
-                    out.append("&gt;");
+                    out.append(HTML_ESCAPE_GT);
                     break;
                 case '"':
-                    out.append("&quot;");
+                    out.append(HTML_ESCAPE_QUOTE);
                     break;
                 case '\'':
-                    out.append("&#39;");
+                    out.append(HTML_ESCAPE_APOS);
                     break;
                 default:
                     out.append(c);

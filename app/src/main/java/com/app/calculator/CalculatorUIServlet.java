@@ -4,20 +4,16 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.sql.DataSource;
-
-import com.app.dao.UserDao;
 import com.app.util.RequestParamContext;
 import com.app.util.ServletResponseUtil;
 import com.app.util.TemplateRenderer;
+import com.app.util.UserDataService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 @WebServlet(name = "CalculatorUIServlet", urlPatterns = {"/calculator"})
 public class CalculatorUIServlet extends HttpServlet {
@@ -50,31 +46,10 @@ public class CalculatorUIServlet extends HttpServlet {
         String ctx = requestContext.contextPath();
 
         // Get the signed-in username from session (if any)
-        String user = "";
-        HttpSession session = req.getSession(false);
-        if (session != null) {
-            Object u = session.getAttribute("user");
-            if (u != null) {
-                user = u.toString();
-            }
-        }
+        String user = UserDataService.currentUser(req);
 
         // Determine admin link if the user is an ADMIN
-        boolean showAdminLink = false;
-        if (!user.isEmpty()) {
-            try {
-                DataSource ds = (DataSource) req.getServletContext().getAttribute("datasource");
-                if (ds != null) {
-                    UserDao dao = new UserDao(ds);
-                    String role = dao.findRoleByUsername(user);
-                    if ("ADMIN".equalsIgnoreCase(role)) {
-                        showAdminLink = true;
-                    }
-                }
-            } catch (Exception ignored) {
-                // ignore and do not show admin link
-            }
-        }
+        boolean showAdminLink = UserDataService.isAdmin(req.getServletContext(), user);
 
         Map<String, String> vals = new HashMap<>();
         vals.put("ctx", TemplateRenderer.escapeHtml(ctx));
@@ -98,12 +73,7 @@ public class CalculatorUIServlet extends HttpServlet {
         }
         vals.put("result_text", TemplateRenderer.escapeHtml(resultText));
 
-        String html;
-        try {
-            html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/calculator.html", vals);
-        } catch (IOException ex) {
-            throw ex;
-        }
+        String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/calculator.html", vals);
         ServletResponseUtil.writeHtml(resp, html);
     }
 }

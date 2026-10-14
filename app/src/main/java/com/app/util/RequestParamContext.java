@@ -5,13 +5,17 @@ import jakarta.servlet.http.HttpServletRequest;
 public final class RequestParamContext {
 
     private static final int MAX_VALUE_LENGTH = 2048;
+    private static final String EMPTY = "";
+    private static final String ROOT_PATH = "/";
+    private static final String PATH_SEPARATOR = "//";
+    private static final String URL_SCHEME_SEPARATOR = "://";
 
     private final HttpServletRequest request;
     private final String contextPath;
 
     public RequestParamContext(HttpServletRequest request) {
         this.request = request;
-        this.contextPath = request.getContextPath() == null ? "" : request.getContextPath();
+        this.contextPath = request.getContextPath() == null ? EMPTY : request.getContextPath();
     }
 
     public String value(String name) {
@@ -45,7 +49,7 @@ public final class RequestParamContext {
 
     public String appPath(String route) {
         if (route == null || route.isBlank()) {
-            return contextPath.isEmpty() ? "/" : contextPath;
+            return contextPath.isEmpty() ? ROOT_PATH : contextPath;
         }
         if (!route.isEmpty() && route.charAt(0) == '/') {
             return contextPath + route;
@@ -70,7 +74,7 @@ public final class RequestParamContext {
         if (path == null || path.isBlank()) {
             return false;
         }
-        if (path.charAt(0) != '/' || path.startsWith("//") || path.contains("://")) {
+        if (path.charAt(0) != '/' || path.startsWith(PATH_SEPARATOR) || path.contains(URL_SCHEME_SEPARATOR)) {
             return false;
         }
         if (contextPath.isEmpty()) {

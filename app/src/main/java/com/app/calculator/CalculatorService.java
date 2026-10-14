@@ -8,6 +8,14 @@ import java.math.RoundingMode;
 
 public class CalculatorService {
     private static final int DIV_SCALE = 10;
+    private static final String OP_ADD = "add";
+    private static final String OP_SUB = "sub";
+    private static final String OP_MUL = "mul";
+    private static final String OP_DIV = "div";
+    private static final String ERROR_MISSING_OP = "Missing 'op' parameter (add, sub, mul, div)";
+    private static final String ERROR_DIVISION_BY_ZERO = "Division by zero";
+    private static final String ERROR_UNKNOWN_OPERATION = "Unknown operation: ";
+    private static final String CLASS_NAME = "CalculatorService";
 
     /**
      * Calculate result for the operation.
@@ -16,26 +24,26 @@ public class CalculatorService {
      */
     public static BigDecimal calculate(BigDecimal a, BigDecimal b, String op) {
         if (op == null || op.isBlank()) {
-            throw new IllegalArgumentException("Missing 'op' parameter (add, sub, mul, div)");
+            throw new IllegalArgumentException(ERROR_MISSING_OP);
         }
         switch (op) {
-            case "add":
+            case OP_ADD:
                 return a.add(b);
-            case "sub":
+            case OP_SUB:
                 return a.subtract(b);
-            case "mul":
+            case OP_MUL:
                 return a.multiply(b);
-            case "div":
+            case OP_DIV:
                 if (b.compareTo(BigDecimal.ZERO) == 0) {
-                    throw new ArithmeticException("Division by zero");
+                    throw new ArithmeticException(ERROR_DIVISION_BY_ZERO);
                 }
                 return a.divide(b, DIV_SCALE, RoundingMode.HALF_UP).stripTrailingZeros();
             default:
-                throw new IllegalArgumentException("Unknown operation: " + op);
+                throw new IllegalArgumentException(ERROR_UNKNOWN_OPERATION + op);
         }
     }
 
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        throw new NotSerializableException("CalculatorService");
+    private final void writeObject(ObjectOutputStream out) throws IOException {
+        throw new NotSerializableException(CLASS_NAME);
     }
 }
