@@ -9,3 +9,7 @@ Feature: Selenium login and calculator navigation with Cucumber + TestNG
     Then the home page is displayed
     When the user opens the calculator page
     Then the calculator page is displayed
+    When the user adds two and three
+    Then the calculator result is five
+    When the user signs out
+    Then the login page is displayed

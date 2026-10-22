@@ -140,6 +140,24 @@ Behavior parity notes:
 - Setting `-Prun-cucumber-selenium-tests` enables execution during `verify` for `selenium-cucumber-testng-tests`.
 - Custom `-D` flags for `app.*`, `coverage.*`, `parasoft.*`, `org.slf4j.*`, and `chrome.args` are forwarded to the Selenium test JVM.
 
+## Selenium Target and Readiness
+
+Set `-Dapp.base.url=http://wildfly:8080/app` to the application root, including
+its deployment context. Both suites also normalize a trailing slash or a
+supplied `/login` suffix, so `/app/login/login` is never constructed.
+Use a hostname reachable from the test agent, not necessarily your browser.
+
+Both suites wait for the login form, check the exact Home and Calculator URLs,
+submit `2 + 3`, verify `Result: 5`, and check sign-out returns to the configured
+login URL. Startup and browser failures fail the test rather than silently skip it.
+The startup wait defaults to 60 seconds and can be changed with
+`-Dapp.startup.timeout.seconds=120`; page transitions wait up to 30 seconds.
+
+For CI validation, omit `-Dmaven.test.failure.ignore=true` and
+`-Dmaven.test.error.ignore=true`. A successful Maven build should not hide
+browser-test failures. Existing CTP lifecycle listeners and baggage headers remain
+enabled by the browser suites.
+
 ## Run Selenium + Cucumber (TestNG) + Parasoft Coverage
 
 This is provided as a separate example module: `selenium-cucumber-testng-tests`.
@@ -285,15 +303,17 @@ if ("cdp".equalsIgnoreCase(mode)) {
 Optional test flags:
 
 - `-Dapp.accept.insecure.certs=true`
-- `-Dapp.skip.reachability.check=true`
+- `-Dapp.startup.timeout.seconds=120`
+- `-Dapp.skip.reachability.check=true` (TestNG HTTP preflight only; login-form checks still run)
 - `-Dchrome.args=--headless=new,--disable-gpu,--window-size=1600,900,--no-sandbox,--disable-dev-shm-usage`
 
 ### Troubleshooting
 
 - If PowerShell parses `-D` values unexpectedly, quote the argument (example: `-D"app.base.url=https://your-host/app"`).
-- `Application endpoint is not reachable`: host/port/path is not reachable from the machine or container running Gradle.
+- `Login endpoint did not become ready` / `Login form did not become ready`: check host, port, deployment context, and application readiness from the test agent. A 404 is not treated as ready.
 - `expected [App Home] but found [Login]`: credentials are invalid or target URL is not this sample app.
-- Coverage shows tests but `0%` line coverage: use one header mode only, set valid `envId`, and use the validated `cdp` + explicit `coverage.baggage.header` command above.
+- Coverage shows tests but no line coverage: check CTP's server-side coverage-processing logs as well as the client publication message. `Successfully published` can mean test results were uploaded even when coverage generation failed.
+- `Unsupported coverage version detected`: align the deployed Jtest agent and CTP's Java coverage processor with compatible versions. A passing browser test or a different baggage header cannot repair an incompatible runtime archive.
 - `CTP startTest response did not include baggage` / `does not support parallel tests`: use `-Dparasoft.coverage.integration.parallel.test.enabled=false`.
 - `SLF4J(W): No SLF4J providers were found`: runtime logger binding is missing or version-mismatched, so `-Dorg.slf4j.simpleLogger.log...=debug` will not print integration logs. Keep `slf4j-simple` aligned with resolved `slf4j-api` (2.x in this project).
 
