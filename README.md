@@ -74,6 +74,42 @@ WAR output path:
 - `app/build/libs/app.war`
 - `app/target/app.war`
 
+## Snake
+
+After signing in, select **Snake** from Home, or open `/app/snake.html` with the
+appropriate deployment context. Steer with arrow keys, WASD, or the on-screen
+direction buttons. Use Start/Pause/Resume, Restart, and the speed selector to
+control the game. Space toggles play/pause when a form control is not focused.
+Food adds 10 points and grows the snake; walls and self-collisions end the game.
+The best score is stored in this browser, not in the server database.
+Phaser is bundled in the WAR, so the game does not require a CDN connection.
+
+## Swagger / OpenAPI
+
+After deploying the rebuilt WAR, sign in to the application and select **Swagger API**
+on the Home page. With the default deployment context:
+
+- Swagger UI: `http://localhost:8080/app/swagger-ui.html`
+- OpenAPI 3.0 JSON: `http://localhost:8080/app/openapi.json`
+
+Replace the host, port, and `/app` context with your deployment values. Swagger UI
+uses relative URLs and the browser's existing session cookie, so **Try it out**
+calls the same application. Both the UI and specification retain the existing
+login protection. No bearer token or manual cookie authorization is required.
+Swagger UI assets are bundled in the WAR; no CDN or external validator is used.
+
+Expand **Calculator**, select `GET /api/calc` or `POST /api/calc`, then use
+**Try it out** and **Execute**. For example, `a=2`, `b=3`, `op=add` returns
+`{"success":true,"result":"5"}`. POST supports JSON and form data.
+
+Session, user administration, and number-guess form endpoints are also documented.
+These return HTML or redirects rather than JSON; browsers follow redirects
+automatically. User creation requires an ADMIN session and creates real accounts.
+Logout invalidates the session, so sign in again before further API tests.
+
+The contract is maintained in `app/src/main/webapp/openapi.json`; update it when
+servlet request or response behavior changes. It is not generated from annotations.
+
 ## Maven to Gradle Command Mapping
 
 - `mvn clean verify` -> `gradlew clean verify`

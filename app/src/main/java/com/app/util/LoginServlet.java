@@ -50,7 +50,7 @@ public class LoginServlet extends HttpServlet {
         String pass = requestContext.value("password");
         String redirect = requestContext.value("redirect");
         String remember = requestContext.value("remember"); // "on" if checked
-        String safeRedirect = requestContext.localRedirectOr(redirect, AppWebConstants.HOME_PATH);
+        String safeRedirect = requestContext.localRedirectOr(redirect, requestContext.appPath(AppWebConstants.HOME_PATH));
 
         try {
             String storedHash = UserDataService.findPasswordHashByUsername(req.getServletContext(), user);

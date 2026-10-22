@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Snake</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/snake.css">
+</head>
+<body>
+    <main class="page-content snake-page">
+        <p class="signed-in"><a href="logout">Sign out</a></p>
+        <nav aria-label="Application">
+            <a href="home">Home</a>
+            <a href="calculator">Calculator</a>
+            <a href="numberguess">Number Guess</a>
+        </nav>
+        <header class="snake-header">
+            <h1>Snake</h1>
+            <span id="snake-status" role="status">Ready</span>
+        </header>
+        <section class="snake-layout" aria-label="Snake game">
+            <div class="snake-board-wrap">
+                <div id="snake-board" role="img" aria-label="Snake game board"></div>
+                <div id="snake-overlay" class="snake-overlay"><strong id="snake-overlay-title">Ready</strong></div>
+            </div>
+            <div class="snake-controls">
+                <dl class="snake-scores">
+                    <div><dt>Score</dt><dd id="snake-score">0</dd></div>
+                    <div><dt>Best on this browser</dt><dd id="snake-best">0</dd></div>
+                </dl>
+                <label for="snake-speed">Speed</label>
+                <select id="snake-speed">
+                    <option value="200">Relaxed</option>
+                    <option value="140" selected>Normal</option>
+                    <option value="90">Fast</option>
+                </select>
+                <div class="snake-actions">
+                    <button id="snake-toggle" type="button" disabled>Start</button>
+                    <button id="snake-restart" type="button" disabled>Restart</button>
+                </div>
+                <div class="snake-direction-pad" role="group" aria-label="Steering">
+                    <button type="button" data-direction="up" aria-label="Move up" title="Move up">&#8593;</button>
+                    <button type="button" data-direction="left" aria-label="Move left" title="Move left">&#8592;</button>
+                    <button type="button" data-direction="down" aria-label="Move down" title="Move down">&#8595;</button>
+                    <button type="button" data-direction="right" aria-label="Move right" title="Move right">&#8594;</button>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="webjars/phaser/3.55.2/dist/phaser.min.js"></script>
+    <script src="static/js/snake.js"></script>
+</body>
+</html>
