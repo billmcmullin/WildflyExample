@@ -66,7 +66,7 @@ public class LogoutServlet extends HttpServlet {
         }
 
         try {
-            resp.sendRedirect(AppWebConstants.LOGIN_PATH);
+            resp.sendRedirect(requestContext.appPath(AppWebConstants.LOGIN_PATH));
         } catch (IOException ex) {
             ServletResponseUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ERROR_REDIRECT_FAILED);
         }

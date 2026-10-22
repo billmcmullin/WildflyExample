@@ -1,0 +1,211 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "WildflyExample API",
+    "version": "1.0.0",
+    "description": "Calculator JSON API and application form endpoints. Sign in through the application before opening Swagger UI; same-origin requests reuse the browser session. Form endpoints return HTML or redirects, not JSON. Browsers follow redirects automatically. Write operations affect real application data."
+  },
+  "servers": [{ "url": ".", "description": "Current application deployment" }],
+  "security": [{ "sessionCookie": [] }],
+  "tags": [
+    { "name": "Calculator" },
+    { "name": "Session" },
+    { "name": "Administration" },
+    { "name": "Number Guess" }
+  ],
+  "paths": {
+    "/api/calc": {
+      "get": {
+        "tags": ["Calculator"],
+        "operationId": "calculateWithQuery",
+        "summary": "Calculate using query parameters",
+        "parameters": [
+          { "name": "a", "in": "query", "description": "First decimal operand; defaults to zero when omitted.", "schema": { "type": "string", "default": "0" }, "example": "2" },
+          { "name": "b", "in": "query", "description": "Second decimal operand; defaults to zero when omitted.", "schema": { "type": "string", "default": "0" }, "example": "3" },
+          { "name": "op", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Operation" }, "example": "add" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/CalculationSuccess" },
+          "400": { "$ref": "#/components/responses/CalculationFailure" },
+          "302": { "$ref": "#/components/responses/LoginRedirect" }
+        }
+      },
+      "post": {
+        "tags": ["Calculator"],
+        "operationId": "calculateWithBody",
+        "summary": "Calculate using JSON or form data",
+        "description": "Decimal operands can be JSON numbers or strings. The result is a string to preserve decimal precision. Division rounds to 10 decimal places using HALF_UP and removes trailing zeros.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CalculationRequest" },
+              "example": { "a": 2, "b": 3, "op": "add" }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["op"],
+                "properties": {
+                  "a": { "type": "string", "default": "0", "example": "2" },
+                  "b": { "type": "string", "default": "0", "example": "3" },
+                  "op": { "$ref": "#/components/schemas/Operation" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/CalculationSuccess" },
+          "400": { "$ref": "#/components/responses/CalculationFailure" },
+          "302": { "$ref": "#/components/responses/LoginRedirect" }
+        }
+      }
+    },
+    "/login": {
+      "get": {
+        "tags": ["Session"],
+        "operationId": "getLoginForm",
+        "summary": "Get the login form",
+        "security": [],
+        "responses": { "200": { "$ref": "#/components/responses/HtmlPage" } }
+      },
+      "post": {
+        "tags": ["Session"],
+        "operationId": "login",
+        "summary": "Sign in and establish a browser session",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string", "format": "password" },
+                  "remember": { "type": "string", "enum": ["on"], "description": "Optional seven-day remember-me cookie." },
+                  "redirect": { "type": "string", "description": "Optional local redirect path." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login form with an invalid-credentials message.", "content": { "text/html": { "schema": { "type": "string" } } } },
+          "302": { "description": "Signed in. Sets JSESSIONID and redirects to the requested local path or home.", "headers": { "Set-Cookie": { "schema": { "type": "string" } }, "Location": { "schema": { "type": "string" } } } }
+        }
+      }
+    },
+    "/logout": {
+      "get": {
+        "tags": ["Session"],
+        "operationId": "logout",
+        "summary": "Sign out of the current session",
+        "description": "Invalidates the session and removes remember-me tokens. Further protected requests require signing in again.",
+        "responses": { "302": { "$ref": "#/components/responses/LoginRedirect" } }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": ["Administration"],
+        "operationId": "getCreateUserForm",
+        "summary": "Get the user creation form (ADMIN only)",
+        "responses": {
+          "200": { "$ref": "#/components/responses/HtmlPage" },
+          "302": { "$ref": "#/components/responses/LoginRedirect" },
+          "403": { "description": "The signed-in user is not an administrator." }
+        }
+      },
+      "post": {
+        "tags": ["Administration"],
+        "operationId": "createUser",
+        "summary": "Create a user (ADMIN only)",
+        "description": "Creates a persistent user account. This is not a dry run.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string", "format": "password" },
+                  "role": { "type": "string", "default": "USER", "description": "Account role, normally USER or ADMIN." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User creation form with a validation or creation-failure message.", "content": { "text/html": { "schema": { "type": "string" } } } },
+          "302": { "description": "User created; redirects home. Unauthenticated requests redirect to login.", "headers": { "Location": { "schema": { "type": "string" } } } },
+          "403": { "description": "The signed-in user is not an administrator." }
+        }
+      }
+    },
+    "/numberguess": {
+      "get": {
+        "tags": ["Number Guess"],
+        "operationId": "getNumberGuess",
+        "summary": "Get the current game page",
+        "parameters": [{ "name": "new", "in": "query", "schema": { "type": "string", "enum": ["1"] }, "description": "Initialize a new game in the current session." }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/HtmlPage" },
+          "302": { "$ref": "#/components/responses/LoginRedirect" }
+        }
+      },
+      "post": {
+        "tags": ["Number Guess"],
+        "operationId": "submitNumberGuess",
+        "summary": "Submit a guess or reset the game",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "guess": { "type": "integer", "minimum": 1, "maximum": 100, "example": 50 },
+                  "new": { "type": "string", "enum": ["1"], "description": "Reset the game instead of submitting a guess." }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "302": { "description": "Redirects to the game page, or login when unauthenticated.", "headers": { "Location": { "schema": { "type": "string" } } } } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": { "type": "apiKey", "in": "cookie", "name": "JSESSIONID", "description": "Managed by the browser after application login. Swagger UI cannot set Cookie headers manually; use the existing same-origin session." }
+    },
+    "schemas": {
+      "Operation": { "type": "string", "enum": ["add", "sub", "mul", "div"], "default": "add" },
+      "CalculationRequest": {
+        "type": "object",
+        "required": ["op"],
+        "properties": {
+          "a": { "oneOf": [{ "type": "number" }, { "type": "string" }], "description": "Defaults to zero when omitted.", "example": 2 },
+          "b": { "oneOf": [{ "type": "number" }, { "type": "string" }], "description": "Defaults to zero when omitted.", "example": 3 },
+          "op": { "$ref": "#/components/schemas/Operation" }
+        }
+      }
+    },
+    "responses": {
+      "CalculationSuccess": {
+        "description": "Calculation completed.",
+        "content": { "application/json": { "schema": { "type": "object", "required": ["success", "result"], "properties": { "success": { "type": "boolean", "enum": [true] }, "result": { "type": "string" } } }, "example": { "success": true, "result": "5" } } }
+      },
+      "CalculationFailure": {
+        "description": "Invalid JSON, invalid number, missing or unsupported operation, division by zero, or calculation failure.",
+        "content": { "application/json": { "schema": { "type": "object", "required": ["success", "error"], "properties": { "success": { "type": "boolean", "enum": [false] }, "error": { "type": "string" } } }, "example": { "success": false, "error": "Division by zero" } } }
+      },
+      "HtmlPage": { "description": "Rendered application HTML page.", "content": { "text/html": { "schema": { "type": "string" } } } },
+      "LoginRedirect": { "description": "Redirect to the login page.", "headers": { "Location": { "schema": { "type": "string", "example": "/login" } } } }
+    }
+  }
+}

@@ -13,6 +13,8 @@ def prop = { String key ->
 }
 
 dependencies {
+    implementation 'org.webjars.npm:phaser:3.55.2'
+    implementation 'org.webjars:swagger-ui:5.34.0'
     implementation "org.hsqldb:hsqldb:${prop('hsqldb.version')}"
 
     compileOnly "jakarta.servlet:jakarta.servlet-api:${prop('jakarta.servlet.version')}"

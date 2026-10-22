@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.servlet.ServletContext;
@@ -19,6 +20,23 @@ import jakarta.servlet.http.HttpSession;
  */
 public class LogoutServletTest
 {
+
+    @Test
+    public void signOutRedirectPreservesDeploymentContext() throws Exception
+    {
+        for (String contextPath : new String[] { "/app", "", "/custom" }) {
+            HttpServletRequest req = mock(HttpServletRequest.class);
+            HttpServletResponse resp = mock(HttpServletResponse.class);
+            HttpSession session = mock(HttpSession.class);
+            when(req.getContextPath()).thenReturn(contextPath);
+            when(req.getSession(false)).thenReturn(session);
+
+            new LogoutServlet().doGet(req, resp);
+
+            verify(session).invalidate();
+            verify(resp).sendRedirect(contextPath + "/login");
+        }
+    }
 
     /**
      * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
