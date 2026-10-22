@@ -16,13 +16,17 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 //Parasoft Coverage Requirement
 import com.parasoft.coverage.integration.selenium.SeleniumCoverageIntegration;
@@ -44,7 +48,7 @@ import com.parasoft.coverage.integration.selenium.SeleniumCoverageIntegration;
  */
 public class LoginAndNavigationTest {
 
-    private static final Duration PAGE_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration PAGE_TIMEOUT = Duration.ofSeconds(30);
     private static final SSLSocketFactory TRUST_ALL_SOCKET_FACTORY = createTrustAllSocketFactory();
     private static final HostnameVerifier TRUST_ALL_HOSTNAME_VERIFIER = (hostname, session) -> true;
     private static final String DEFAULT_CHROME_ARGS =
@@ -63,19 +67,19 @@ public class LoginAndNavigationTest {
     private boolean usingProxyHeaderInjection;
 
     // Mixed setup: normal Selenium initialization plus Parasoft coverage mode/header configuration.
-    @BeforeClass
-    public void setUp() {
+    private void setUp() {
         // Base application URL under test. Override for other environments with:
         // -Dapp.base.url=http://your-host:8080/app
-        baseUrl = System.getProperty("app.base.url", "http://localhost:8080/app");
+        baseUrl = normalizeBaseUrl(System.getProperty("app.base.url", "http://localhost:8080/app"));
         boolean acceptInsecureCerts = Boolean.parseBoolean(System.getProperty("app.accept.insecure.certs", "true"));
         boolean skipReachabilityCheck = Boolean.parseBoolean(System.getProperty("app.skip.reachability.check", "false"));
 
-        if (!skipReachabilityCheck && !isReachable(baseUrl + "/login", acceptInsecureCerts)) {
-            throw new SkipException("Application endpoint is not reachable: " + baseUrl
-                    + ". Start WildFly with the app deployed, then rerun tests. "
-                    + "If this endpoint uses a self-signed certificate, keep app.accept.insecure.certs=true "
-                    + "or bypass this check with -Dapp.skip.reachability.check=true.");
+        if (!skipReachabilityCheck) {
+            new FluentWait<>(baseUrl + "/login")
+                .withTimeout(startupTimeout())
+                .pollingEvery(Duration.ofSeconds(1))
+                .withMessage("Login endpoint did not become ready: " + baseUrl + "/login")
+                .until(url -> isReachable(url, acceptInsecureCerts));
         }
 
         try {
@@ -91,7 +95,7 @@ public class LoginAndNavigationTest {
             driver = createDriverWithCoverage(options, browserHeaderMode, explicitBaggageHeader, acceptInsecureCerts);
             driver.manage().timeouts().pageLoadTimeout(PAGE_TIMEOUT);
         } catch (Exception ex) {
-            throw new SkipException("Unable to start Chrome browser for Selenium test: " + ex.getMessage(), ex);
+            throw new IllegalStateException("Unable to start Chrome browser for Selenium test: " + ex.getMessage(), ex);
         }
     }
 
@@ -109,31 +113,70 @@ public class LoginAndNavigationTest {
     // Main functional UI test; only the first line is Parasoft-specific baggage header application.
     @Test
     public void loginAndOpenCalculatorFromHome() {
+        setUp();
         applyCoverageHeaderForCurrentTest();
-        driver.get(baseUrl + "/login");
+        new WebDriverWait(driver, startupTimeout())
+            .ignoring(WebDriverException.class)
+            .withMessage(() -> "Login form did not become ready at " + baseUrl + "/login; current URL=" + driver.getCurrentUrl())
+            .until(browser -> {
+                browser.get(baseUrl + "/login");
+                return !browser.findElements(By.name("username")).isEmpty()
+                    && !browser.findElements(By.name("password")).isEmpty();
+            });
 
-        WebElement username = driver.findElement(By.name("username"));
-        WebElement password = driver.findElement(By.name("password"));
-        WebElement submit = driver.findElement(By.cssSelector("button[type='submit']"));
+        WebDriverWait wait = new WebDriverWait(driver, PAGE_TIMEOUT);
+        WebElement username = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("username")));
+        WebElement password = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("password")));
+        WebElement submit = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button[type='submit']")));
 
         username.sendKeys(System.getProperty("app.username", "admin"));
         password.sendKeys(System.getProperty("app.password", "admin"));
         submit.click();
 
-        String titleAfterLogin = driver.getTitle();
-        if (!"App Home".equals(titleAfterLogin)) {
+        try {
+            wait.until(ExpectedConditions.and(ExpectedConditions.urlToBe(baseUrl + "/home"), ExpectedConditions.titleIs("App Home")));
+        } catch (TimeoutException ex) {
             String currentUrl = driver.getCurrentUrl();
             List<WebElement> messages = driver.findElements(By.cssSelector(".result"));
             String loginMessage = messages.isEmpty() ? "(none)" : messages.get(0).getText();
-            Assert.fail("Login should redirect to the home page, but stayed on title='" + titleAfterLogin
+            Assert.fail("Login should redirect to " + baseUrl + "/home, but stayed on title='" + driver.getTitle()
                 + "', url='" + currentUrl + "', message='" + loginMessage
-                + "'. Verify app.base.url points to this sample app and credentials are valid.");
+                + "'. Verify app.base.url points to this sample app and credentials are valid.", ex);
         }
 
-        driver.findElement(By.linkText("Calculator")).click();
-        Assert.assertEquals(driver.getTitle(), "Calculator", "Home link should navigate to calculator page.");
+        wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Calculator"))).click();
+        wait.until(ExpectedConditions.and(ExpectedConditions.urlToBe(baseUrl + "/calculator"), ExpectedConditions.titleIs("Calculator")));
+        WebElement firstOperand = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("a")));
+        firstOperand.clear();
+        firstOperand.sendKeys("2");
+        WebElement secondOperand = driver.findElement(By.name("b"));
+        secondOperand.clear();
+        secondOperand.sendKeys("3");
+        new Select(driver.findElement(By.name("op"))).selectByValue("add");
+        driver.findElement(By.cssSelector("button[type='submit']")).click();
+        wait.until(ExpectedConditions.textToBe(By.cssSelector(".result"), "Result: 5"));
+        Assert.assertTrue(driver.getCurrentUrl().startsWith(baseUrl + "/calculator?"), "Calculation must remain in the configured application.");
+        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".signed-in a"))).click();
+        wait.until(ExpectedConditions.urlToBe(baseUrl + "/login"));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("username")));
+    }
 
-        Assert.assertTrue(driver.getPageSource().contains("Calculator"), "Calculator page should render content.");
+    private static Duration startupTimeout() {
+        return Duration.ofSeconds(Long.parseLong(System.getProperty("app.startup.timeout.seconds", "60")));
+    }
+
+    static String normalizeBaseUrl(String configuredUrl) {
+        URI configured = URI.create(configuredUrl.trim());
+        if (!("http".equalsIgnoreCase(configured.getScheme()) || "https".equalsIgnoreCase(configured.getScheme()))
+                || configured.getHost() == null || configured.getUserInfo() != null
+                || configured.getRawQuery() != null || configured.getRawFragment() != null) {
+            throw new IllegalArgumentException("app.base.url must be an HTTP(S) application URL without credentials, query, or fragment");
+        }
+        String normalized = configured.toString().replaceFirst("/+$", "");
+        if (normalized.endsWith("/login")) {
+            normalized = normalized.substring(0, normalized.length() - "/login".length());
+        }
+        return normalized;
     }
 
     // Normal helper only: verifies endpoint reachability before tests start.
@@ -146,9 +189,10 @@ public class LoginAndNavigationTest {
                 httpsConnection.setHostnameVerifier(TRUST_ALL_HOSTNAME_VERIFIER);
             }
             connection.setRequestMethod("GET");
+            connection.setInstanceFollowRedirects(false);
             connection.setConnectTimeout((int) Duration.ofSeconds(3).toMillis());
             connection.setReadTimeout((int) Duration.ofSeconds(3).toMillis());
-            return connection.getResponseCode() < 500;
+            return connection.getResponseCode() == HttpURLConnection.HTTP_OK;
         } catch (Exception ex) {
             return false;
         } finally {
@@ -221,14 +265,17 @@ public class LoginAndNavigationTest {
     // Parasoft-specific helper: wires CDP header injection on a newly created driver.
     private ChromeDriver createDriverWithCdpCoverage(ChromeOptions options, String explicitBaggageHeader) {
         ChromeDriver cdpDriver = new ChromeDriver(options);
-        if (explicitBaggageHeader.isBlank()) {
-            // Configure CDP interception to use the current test baggage header.
-            SeleniumCoverageIntegration.configureCdpBaggageHeader(cdpDriver);
-        } else {
-            // Configure CDP interception with explicit -Dcoverage.baggage.header value.
-            SeleniumCoverageIntegration.configureCdpBaggageHeader(cdpDriver, explicitBaggageHeader);
+        try {
+            if (explicitBaggageHeader.isBlank()) {
+                SeleniumCoverageIntegration.configureCdpBaggageHeader(cdpDriver);
+            } else {
+                SeleniumCoverageIntegration.configureCdpBaggageHeader(cdpDriver, explicitBaggageHeader);
+            }
+            return cdpDriver;
+        } catch (RuntimeException ex) {
+            cdpDriver.quit();
+            throw ex;
         }
-        return cdpDriver;
     }
 
     // Normal helper only: builds Chrome runtime options and optional command-line browser args.
