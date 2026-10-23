@@ -18,6 +18,14 @@ import jakarta.servlet.http.HttpServletResponse;
 class ServletResponseUtilTest {
 
     @Test
+    void missingTemplateReturnsControlledError() throws Exception {
+        jakarta.servlet.ServletContext context = mock(jakarta.servlet.ServletContext.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        ServletResponseUtil.renderHtml(response, context, "/missing-template", java.util.Map.of());
+        verify(response).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
+    }
+
+    @Test
     void writeHtmlWritesUtf8Payload() throws Exception {
         HttpServletResponse resp = mock(HttpServletResponse.class);
         RecordingOutputStream os = new RecordingOutputStream();

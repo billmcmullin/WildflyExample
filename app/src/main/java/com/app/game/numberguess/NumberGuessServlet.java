@@ -89,8 +89,8 @@ public class NumberGuessServlet extends HttpServlet {
         boolean showAdminLink = UserDataService.isAdmin(req.getServletContext(), user);
 
         java.util.Map<String, String> vals = new java.util.HashMap<>();
-        vals.put("ctx", TemplateRenderer.escapeHtml(requestContext.contextPath()));
-        vals.put("user", TemplateRenderer.escapeHtml(user));
+        vals.put(com.app.util.AppWebConstants.CONTEXT_KEY, TemplateRenderer.escapeHtml(requestContext.contextPath()));
+        vals.put(com.app.util.AppWebConstants.USER_KEY, TemplateRenderer.escapeHtml(user));
         vals.put("admin_href", TemplateRenderer.escapeHtml(requestContext.appPath("/admin/users")));
         vals.put("admin_style", showAdminLink ? "" : " style=\"display:none\"");
         vals.put("low", String.valueOf(low));
@@ -106,8 +106,7 @@ public class NumberGuessServlet extends HttpServlet {
         vals.put("game_over", over ? "true" : "false");
         vals.put("candidates_text", TemplateRenderer.escapeHtml(candidatesText));
 
-        String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/numberguess.html", vals);
-        ServletResponseUtil.writeHtml(resp, html);
+        ServletResponseUtil.renderHtml(resp, req.getServletContext(), "/WEB-INF/templates/numberguess.html", vals);
 
         // Clear transient message after showing
         session.removeAttribute(ATTR_MESSAGE);

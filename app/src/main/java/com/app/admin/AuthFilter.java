@@ -80,7 +80,7 @@ public class AuthFilter implements Filter {
             }
 
             // redirect to login
-            resp.sendRedirect(PATH_LOGIN);
+            resp.sendRedirect(ctx + PATH_LOGIN);
             return;
         }
 

@@ -29,15 +29,15 @@ public class CreateUserServlet extends HttpServlet {
     private static final String TEMPLATE_PATH = "/WEB-INF/templates/createuser.html";
     private static final String MESSAGE_REDIRECT_FAILED = "Redirect failed";
     private static final String MESSAGE_TEMPLATE_RENDER_ERROR = "Template render error";
-    private static final String KEY_CTX = "ctx";
+    private static final String KEY_CTX = com.app.util.AppWebConstants.CONTEXT_KEY;
     private static final String KEY_MESSAGE = "message";
-    private static final String KEY_USER = "user";
+    private static final String KEY_USER = com.app.util.AppWebConstants.USER_KEY;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         // ensure admin
         HttpSession session = req.getSession(false);
-        String user = session != null ? (String) session.getAttribute("user") : null;
+        String user = session != null ? (String) session.getAttribute(CreateUserServlet.KEY_USER) : null;
         if (user == null) {
             try {
                 resp.sendRedirect(AppWebConstants.LOGIN_PATH);
@@ -61,7 +61,7 @@ public class CreateUserServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         HttpSession session = req.getSession(false);
-        String adminUser = session != null ? (String) session.getAttribute("user") : null;
+        String adminUser = session != null ? (String) session.getAttribute(CreateUserServlet.KEY_USER) : null;
         RequestParamContext requestContext = new RequestParamContext(req);
         if (adminUser == null) {
             try {

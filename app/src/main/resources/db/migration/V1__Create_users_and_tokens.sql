@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER IDENTITY PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(256) NOT NULL,
+    role VARCHAR(32) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS remember_tokens (
+    token VARCHAR(128) PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    expiry_ms BIGINT NOT NULL
+);

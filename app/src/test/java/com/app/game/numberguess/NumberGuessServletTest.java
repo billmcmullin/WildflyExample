@@ -3,7 +3,7 @@ package com.app.game.numberguess;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.nullable;
@@ -60,8 +60,9 @@ public class NumberGuessServletTest
         HttpSession getSessionResult2 = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult, getSessionResult2);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -103,8 +104,9 @@ public class NumberGuessServletTest
         HttpSession getSessionResult2 = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult, getSessionResult2);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -146,8 +148,9 @@ public class NumberGuessServletTest
         HttpSession getSessionResult2 = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult, getSessionResult2);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -189,8 +192,9 @@ public class NumberGuessServletTest
         HttpSession getSessionResult2 = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult, getSessionResult2);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -234,8 +238,9 @@ public class NumberGuessServletTest
         when(getSessionResult2.getAttribute(nullable(String.class))).thenReturn(getAttributeResult8);
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult, getSessionResult2);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -278,8 +283,9 @@ public class NumberGuessServletTest
         HttpSession getSessionResult2 = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult, getSessionResult2);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -324,8 +330,9 @@ public class NumberGuessServletTest
         HttpSession getSessionResult2 = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult, getSessionResult2);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -368,8 +375,9 @@ public class NumberGuessServletTest
         HttpSession getSessionResult2 = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult, getSessionResult2);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }

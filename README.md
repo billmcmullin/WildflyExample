@@ -74,6 +74,117 @@ WAR output path:
 - `app/build/libs/app.war`
 - `app/target/app.war`
 
+## Calendar
+
+After signing in, select **Calendar** from the Home navigation button or Quick
+links, or open `/app/calendar` with the appropriate deployment context. The page
+opens to the current month and year, shows today's full date, and highlights
+today in the user's preferred time zone. Use the previous/next controls, month
+picker, or **Today** to navigate. Preferences persist the time zone, Monday or
+Sunday week start, and default Month or Agenda view; the initial zone is the
+application server's zone.
+
+Calendar ownership is persisted in the `user_calendars` HSQLDB table, keyed by
+the signed-in username with a foreign key to `users`. The table is created
+automatically on startup for both existing and new databases. First access
+creates the user's calendar without overwriting it on later visits. Ownership
+uses the authenticated account rather than the temporary session ID, so it
+survives sign-out and sign-in. Calendars are private, including for admin users;
+sharing and email delivery are not included.
+The month being viewed is a URL parameter, not a saved preference.
+
+### Events, Search, and History
+
+Create, inspect, edit, and delete events using the calendar and agenda. Events
+have a title, description, dates/times, event time zone, all-day flag, optional
+recurrence, and optional reminder. All-day end dates in the form are inclusive;
+storage and iCalendar use an exclusive end date. Timed events retain the event's
+wall-clock time and zone, while display converts to the viewer's preference.
+Nonexistent daylight-saving gap times are rejected; ambiguous repeated times
+use Java's earlier-offset convention. Invalid forms retain entered fields.
+
+All mutations require a session-bound CSRF token. Event and notification IDs
+are always checked against the authenticated account, never a submitted owner.
+Version checks reject stale edits with HTTP 409. Creates, changes, deletions,
+and imports write audit snapshots in the same transaction as the event change.
+History is private, includes deleted events, and is retained indefinitely in
+this version; it is displayed in pages of 50 entries.
+
+Agenda searches match title/description case-insensitively and support inclusive
+date ranges of at most 366 days. Results are sorted and paginated in groups of
+25. Each account supports up to 1000 event series; a search is bounded to 10000
+occurrences. Event durations must be positive and no longer than 366 days.
+
+### Recurrence and Reminders
+
+Daily, weekly, and monthly recurrence use iCal4j. Choose 1 to 999 occurrences or
+an end date within five years. Monthly dates absent from a month are skipped,
+not moved to its final day. Edit/delete one occurrence or the full series;
+single-occurrence edits create a linked replacement and exclude the old
+occurrence. Deleting the entire series also deletes its linked replacements.
+Existing exclusions remain when a series is edited. Recurring times
+in daylight-saving gaps are skipped.
+
+Reminders are in-app only, from the event start up to seven days beforehand.
+WildFly's `java:comp/DefaultManagedScheduledExecutorService` checks once per
+minute; only the scheduled future is cancelled on shutdown, never the managed
+executor. Calendar requests also refresh due reminders, including on Tomcat
+where a managed scheduler is unavailable. Missed reminders recover for seven
+days; older reminders are not generated. Notifications persist and a unique
+event/occurrence key prevents duplicates. Marking one read remains effective
+across later checks. This is not a guaranteed real-time delivery service.
+
+### Import and Export
+
+Export the whole calendar or one event as `.ics`. iCal4j writes escaped content,
+timezone definitions, all-day values, supported recurrence, and exclusions.
+Import uses a session-bound preview followed by explicit confirmation, with no
+database writes during preview. Files are limited to 256 KiB and 200 events.
+Existing UIDs are skipped rather than overwritten, and a confirmed import is
+transactional. Uploads are deleted after parsing and external timezone updates
+are disabled.
+
+Edited occurrences export as separate VEVENTs plus EXDATE on the original
+series. When imported into another account, those replacement VEVENTs are
+independent events rather than linked series replacements.
+
+The supported event properties are UID, dates, summary, description, recurrence,
+EXDATE, standard timestamps/status/class/transparency, and application zone/
+reminder extensions. Attendees, attachments, nested alarms, detached
+RECURRENCE-ID overrides, arbitrary recurrence rules, and non-event calendar
+components are rejected rather than silently dropped. Repeating timed exports
+require UTC or an IANA zone, not a nonzero fixed-offset zone.
+
+The existing database connection is reused. Keep the server's working-directory
+`app-runtime/app-data` folder on persistent, writable storage across restarts and
+deployments. The `database.directory` servlet context parameter can override
+that directory. Startup fails if persistent storage or schema migration fails;
+the application no longer silently falls back to an in-memory database.
+Database errors while serving the calendar return HTTP 503.
+
+### Database Migrations
+
+Startup applies Flyway migrations from `app/src/main/resources/db/migration`
+before publishing the datasource or seeding the default admin. Both Maven and
+Gradle package the same migration resources and Flyway HSQLDB support module.
+
+- V1 creates users and remember tokens if absent.
+- V2 creates calendar ownership if absent.
+- V3 adds events, preferences, recurrence exclusions, audit history, and notifications.
+- V4 links edited occurrences to their series for cascading series deletion.
+- Existing databases without migration history are adopted at baseline version
+  0, so V1 and V2 still run without replacing existing rows or credentials.
+- Applied versions and checksums are recorded in `flyway_schema_history`.
+  Later startups validate history and apply only pending migrations.
+- Add future changes as new `V5__Description.sql`, `V6__Description.sql`, etc.
+  Do not edit previously applied migrations. Automatic cleanup is disabled.
+
+Before the first migrated deployment, stop the server and back up the complete
+database directory. HSQLDB schema changes are not fully transactional: after a
+failed migration, investigate and restore the backup when necessary rather than
+assuming every DDL statement was rolled back. Never delete or repair migration
+history just to bypass a startup validation error.
+
 ## Snake
 
 After signing in, select **Snake** from Home, or open `/app/snake.html` with the

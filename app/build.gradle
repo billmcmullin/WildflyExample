@@ -13,6 +13,10 @@ def prop = { String key ->
 }
 
 dependencies {
+    implementation 'org.jsoup:jsoup:1.21.2'
+    implementation 'org.mnode.ical4j:ical4j:4.1.1'
+    implementation 'org.flywaydb:flyway-core:10.20.1'
+    implementation 'org.flywaydb:flyway-database-hsqldb:10.20.1'
     implementation 'org.webjars.npm:phaser:3.55.2'
     implementation 'org.webjars:swagger-ui:5.34.0'
     implementation "org.hsqldb:hsqldb:${prop('hsqldb.version')}"
