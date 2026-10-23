@@ -2,10 +2,12 @@ package com.app.util;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletContext;
 
 public final class ServletResponseUtil {
 
@@ -15,8 +17,18 @@ public final class ServletResponseUtil {
     private static final String LOG_WRITE_FAILED = "Failed to write HTML response";
     private static final String LOG_SEND_ERROR_FAILED = "Failed to send error response";
     private static final String ERROR_RESPONSE_WRITE = "Response write error";
+    private static final String LOG_RENDER_FAILED = "Failed to render HTML response";
 
     private ServletResponseUtil() {
+    }
+
+    public static void renderHtml(HttpServletResponse response, ServletContext context, String templatePath, Map<String, String> values) {
+        try {
+            writeHtml(response, TemplateRenderer.render(context, templatePath, values));
+        } catch (IOException exception) {
+            LOGGER.log(Level.WARNING, LOG_RENDER_FAILED, exception);
+            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ERROR_RESPONSE_WRITE);
+        }
     }
 
     public static void writeHtml(HttpServletResponse response, String body) {

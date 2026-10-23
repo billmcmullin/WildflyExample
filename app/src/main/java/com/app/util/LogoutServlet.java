@@ -29,7 +29,7 @@ public class LogoutServlet extends HttpServlet {
         HttpSession s = req.getSession(false);
         String user = null;
         if (s != null) {
-            Object u = s.getAttribute("user");
+            Object u = s.getAttribute(com.app.util.AppWebConstants.USER_KEY);
             if (u != null) {
                 user = u.toString();
             }

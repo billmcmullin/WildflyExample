@@ -2,9 +2,11 @@ package com.app.calculator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jakarta.json.Json;
 import jakarta.json.JsonException;
@@ -13,6 +15,8 @@ import jakarta.json.JsonObjectBuilder;
 import jakarta.json.JsonReader;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
+import jakarta.json.JsonWriter;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -28,6 +32,15 @@ public class CalculatorApiServlet extends HttpServlet {
     private static final String MESSAGE_INVALID_JSON = "Invalid JSON body";
     private static final String MESSAGE_INVALID_NUMBER = "Invalid number format";
     private static final String MESSAGE_SERVER_ERROR = "Server error";
+    private static final String MESSAGE_MISSING_OPERATION = "Missing 'op' parameter (add, sub, mul, div)";
+    private static final String MESSAGE_UNKNOWN_OPERATION = "Unknown operation: ";
+    private static final String MESSAGE_DIVISION_BY_ZERO = "Division by zero";
+    private static final String MESSAGE_ARITHMETIC_ERROR = "Arithmetic operation could not be completed";
+    private static final Logger LOGGER = Logger.getLogger("com.app.calculator.CalculatorApiServlet");
+
+    private final void readObject(ObjectInputStream input) throws IOException {
+        throw new NotSerializableException("CalculatorApiServlet");
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
@@ -98,6 +111,10 @@ public class CalculatorApiServlet extends HttpServlet {
             BigDecimal a = new BigDecimal((aStr != null) ? aStr.trim() : "0");
             BigDecimal b = new BigDecimal((bStr != null) ? bStr.trim() : "0");
 
+            if ("div".equals(op) && b.signum() == 0) {
+                sendJsonFailure(resp, MESSAGE_DIVISION_BY_ZERO);
+                return;
+            }
             java.math.BigDecimal result = CalculatorService.calculate(a, b, op);
 
             jb.add("success", true)
@@ -106,8 +123,10 @@ public class CalculatorApiServlet extends HttpServlet {
             writeJson(resp, jb.build());
         } catch (NumberFormatException e) {
             sendJsonFailure(resp, MESSAGE_INVALID_NUMBER);
-        } catch (IllegalArgumentException | ArithmeticException e) {
-            sendJsonFailure(resp, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            sendJsonFailure(resp, op == null || op.isBlank() ? MESSAGE_MISSING_OPERATION : MESSAGE_UNKNOWN_OPERATION + op);
+        } catch (ArithmeticException e) {
+            sendJsonFailure(resp, MESSAGE_ARITHMETIC_ERROR);
         } catch (Exception e) {
             sendJsonFailure(resp, MESSAGE_SERVER_ERROR);
         }
@@ -132,18 +151,19 @@ public class CalculatorApiServlet extends HttpServlet {
 
     private void writeJson(HttpServletResponse resp, JsonObject payload) {
         try {
-            if (resp.getOutputStream() != null) {
-                resp.getOutputStream().write(payload.toString().getBytes(StandardCharsets.UTF_8));
+            ServletOutputStream stream = resp.getOutputStream();
+            if (stream != null) {
+                try (JsonWriter writer = Json.createWriter(stream)) {
+                    writer.writeObject(payload);
+                }
                 return;
             }
-        } catch (IOException ignored) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            return;
-        }
-
-        try (PrintWriter out = resp.getWriter()) {
-            out.write(payload.toString());
-        } catch (IOException ignored) {
+            java.io.PrintWriter output = resp.getWriter();
+            try (JsonWriter writer = Json.createWriter(output)) {
+                writer.writeObject(payload);
+            }
+        } catch (IOException | JsonException exception) {
+            LOGGER.log(Level.WARNING, "Unable to write calculator response", exception);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }

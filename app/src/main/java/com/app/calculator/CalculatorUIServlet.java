@@ -52,8 +52,8 @@ public class CalculatorUIServlet extends HttpServlet {
         boolean showAdminLink = UserDataService.isAdmin(req.getServletContext(), user);
 
         Map<String, String> vals = new HashMap<>();
-        vals.put("ctx", TemplateRenderer.escapeHtml(ctx));
-        vals.put("user", TemplateRenderer.escapeHtml(user));
+        vals.put(com.app.util.AppWebConstants.CONTEXT_KEY, TemplateRenderer.escapeHtml(ctx));
+        vals.put(com.app.util.AppWebConstants.USER_KEY, TemplateRenderer.escapeHtml(user));
         vals.put("admin_href", TemplateRenderer.escapeHtml(requestContext.appPath("/admin/users")));
         vals.put("admin_style", showAdminLink ? "" : " style=\"display:none\"");
 
@@ -73,7 +73,6 @@ public class CalculatorUIServlet extends HttpServlet {
         }
         vals.put("result_text", TemplateRenderer.escapeHtml(resultText));
 
-        String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/calculator.html", vals);
-        ServletResponseUtil.writeHtml(resp, html);
+        ServletResponseUtil.renderHtml(resp, req.getServletContext(), "/WEB-INF/templates/calculator.html", vals);
     }
 }

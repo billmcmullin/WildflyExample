@@ -26,12 +26,11 @@ public class HomeServlet extends HttpServlet {
         boolean showAdminLink = UserDataService.isAdmin(req.getServletContext(), user);
 
         Map<String, String> vals = new HashMap<>();
-        vals.put("ctx", TemplateRenderer.escapeHtml(ctxPath));
-        vals.put("user", TemplateRenderer.escapeHtml(user));
+        vals.put(com.app.util.AppWebConstants.CONTEXT_KEY, TemplateRenderer.escapeHtml(ctxPath));
+        vals.put(com.app.util.AppWebConstants.USER_KEY, TemplateRenderer.escapeHtml(user));
         vals.put("admin_href", TemplateRenderer.escapeHtml(requestContext.appPath("/admin/users")));
         vals.put("admin_style", showAdminLink ? "" : " style=\"display:none\"");
 
-        String html = TemplateRenderer.render(req.getServletContext(), "/WEB-INF/templates/home.html", vals);
-        ServletResponseUtil.writeHtml(resp, html);
+        ServletResponseUtil.renderHtml(resp, req.getServletContext(), "/WEB-INF/templates/home.html", vals);
     }
 }

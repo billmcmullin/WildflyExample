@@ -50,7 +50,7 @@ class AuthFilterTest {
 
         filter.doFilter(req, resp, chain);
 
-        verify(resp).sendRedirect("/login");
+        verify(resp).sendRedirect("/app/login");
     }
 
     @Test
@@ -119,6 +119,6 @@ class AuthFilterTest {
 
         filter.doFilter(req, resp, chain);
 
-        verify(resp).sendRedirect("/login");
+        verify(resp).sendRedirect("/app/login");
     }
 }

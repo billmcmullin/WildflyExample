@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS user_calendars (
+    username VARCHAR(100) PRIMARY KEY REFERENCES users(username),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);

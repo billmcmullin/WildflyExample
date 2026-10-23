@@ -3,7 +3,7 @@ package com.app.util;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.nullable;
@@ -48,8 +48,9 @@ public class HomeServletTest
         HttpSession getSessionResult = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -79,8 +80,9 @@ public class HomeServletTest
         HttpSession getSessionResult = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -112,8 +114,9 @@ public class HomeServletTest
         when(getSessionResult.getAttribute(nullable(String.class))).thenReturn(getAttributeResult);
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }
@@ -146,8 +149,9 @@ public class HomeServletTest
         HttpSession getSessionResult = null; // UTA: configured value
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
         HttpServletResponse resp = mock(HttpServletResponse.class);
-        assertThrows(IOException.class, () -> {
+        assertDoesNotThrow(() -> {
             underTest.doGet(req, resp);
+            org.mockito.Mockito.verify(resp).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Response write error");
         });
 
     }

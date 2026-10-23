@@ -8,6 +8,9 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import com.app.database.DatabaseMigrations;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 
@@ -17,18 +20,20 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 
 /**
- * Initializes HSQLDB. Uses a local runtime folder and falls back to
- * an in-memory DB if filesystem initialization fails. Does not throw from
- * contextInitialized so deployment is not blocked by startup issues.
+ * Initializes persistent HSQLDB storage and applies versioned schema migrations.
+ * Initialization failures prevent deployment rather than expose partial storage.
  */
 @WebListener
 public class DatabaseInitListener implements ServletContextListener {
+    private static final String TEXT_DATABASE_DIRECTORY = "database.directory";
+    private static final String TEXT_DATABASE_INIT_LISTENER_APPLIED = "DatabaseInitListener: applied ";
+    private static final String TEXT_SCHEMA_MIGRATIONS = " schema migrations";
+
 
     private static final String BASE_DIR = "app-runtime";
     private static final String DATA_DIR = "app-data";
     private static final String DB_NAME = "appdb";
     private static final String DB_URL_FILE_PREFIX = "jdbc:hsqldb:file:";
-    private static final String DB_URL_MEM = "jdbc:hsqldb:mem:appdb";
     private static final String DB_URL_SUFFIX = ";shutdown=true";
     private static final String DB_USER = "sa";
     private static final String DB_PASSWORD = "";
@@ -36,32 +41,12 @@ public class DatabaseInitListener implements ServletContextListener {
     private static final String DEFAULT_ADMIN = "admin";
     private static final String ROLE_ADMIN = "ADMIN";
 
-    private static final String SQL_CREATE_USERS = """
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER IDENTITY PRIMARY KEY,
-                username VARCHAR(100) UNIQUE NOT NULL,
-                password_hash VARCHAR(256) NOT NULL,
-                role VARCHAR(32) NOT NULL
-            )
-            """;
-
-    private static final String SQL_CREATE_REMEMBER_TOKENS = """
-            CREATE TABLE IF NOT EXISTS remember_tokens (
-                token VARCHAR(128) PRIMARY KEY,
-                username VARCHAR(100) NOT NULL,
-                expiry_ms BIGINT NOT NULL
-            )
-            """;
-
     private static final String SQL_COUNT_ADMIN = "SELECT COUNT(*) FROM users WHERE username = ?";
     private static final String SQL_INSERT_USER = "INSERT INTO users(username, password_hash, role) VALUES(?, ?, ?)";
 
     private static final String LOG_FILE_DB = "DatabaseInitListener: using file DB at ";
-    private static final String LOG_FILE_DB_FAIL = "DatabaseInitListener: failed to create/use file DB at ";
-    private static final String LOG_FILE_DB_FALLBACK = "DatabaseInitListener: falling back to in-memory HSQLDB (data will NOT persist).";
     private static final String LOG_ADMIN_CREATED = "DatabaseInitListener: created default admin user";
-    private static final String LOG_SCHEMA_INIT_FAIL = "DatabaseInitListener: failed to initialize database schema: ";
-    private static final String LOG_SEPARATOR = " - ";
+    private static final String LOG_INIT_FAIL = "DatabaseInitListener: persistent database initialization failed";
     private static final String CLASS_NAME = "DatabaseInitListener";
 
     @Override
@@ -69,62 +54,40 @@ public class DatabaseInitListener implements ServletContextListener {
         ServletContext ctx = sce.getServletContext();
         JDBCDataSource ds = new JDBCDataSource();
 
-        // Use a local runtime folder by default.
-        String base = BASE_DIR;
-
-        Path dataDir = null;
-
         try {
-            dataDir = Path.of(base).resolve(DATA_DIR);
+            String configuredDirectory = ctx.getInitParameter(DatabaseInitListener.TEXT_DATABASE_DIRECTORY);
+            Path dataDir = configuredDirectory == null || configuredDirectory.isBlank()
+                    ? Path.of(BASE_DIR).resolve(DATA_DIR) : Path.of(configuredDirectory);
             Files.createDirectories(dataDir);
-            // Use a file-based HSQLDB so data persists across restarts
             String dbUrl = DB_URL_FILE_PREFIX + dataDir.resolve(DB_NAME).toAbsolutePath() + DB_URL_SUFFIX;
             ds.setUrl(dbUrl);
             ds.setUser(DB_USER);
             ds.setPassword(DB_PASSWORD);
             ctx.log(LOG_FILE_DB + dataDir.toAbsolutePath());
-        } catch (Throwable t) {
-            // Could not use file-based DB (permissions or other). Fall back to in-memory DB.
-            ctx.log(LOG_FILE_DB_FAIL + (dataDir != null ? dataDir.toAbsolutePath() : base) + LOG_SEPARATOR + t.getMessage());
-            ctx.log(LOG_FILE_DB_FALLBACK);
-            ds.setUrl(DB_URL_MEM);
-            ds.setUser(DB_USER);
-            ds.setPassword(DB_PASSWORD);
-        }
 
-        // Initialize schema and default admin user if possible
-        try (Connection c = ds.getConnection()) {
-            try (PreparedStatement createUsers = c.prepareStatement(SQL_CREATE_USERS)) {
-                createUsers.executeUpdate();
-            }
+            int migrationsApplied = DatabaseMigrations.migrate(ds);
+            ctx.log(DatabaseInitListener.TEXT_DATABASE_INIT_LISTENER_APPLIED + migrationsApplied + DatabaseInitListener.TEXT_SCHEMA_MIGRATIONS);
 
-            try (PreparedStatement createRememberTokens = c.prepareStatement(SQL_CREATE_REMEMBER_TOKENS)) {
-                createRememberTokens.executeUpdate();
-            }
-
-            // insert default admin if not exists
-            try (PreparedStatement ps = c.prepareStatement(SQL_COUNT_ADMIN)) {
-                ps.setString(1, DEFAULT_ADMIN);
-                try (ResultSet rs = ps.executeQuery()) {
-                    rs.next();
-                    if (rs.getInt(1) == 0) {
-                        try (PreparedStatement ins = c.prepareStatement(SQL_INSERT_USER)) {
-                            ins.setString(1, DEFAULT_ADMIN);
-                            ins.setString(2, PasswordUtil.hashPassword(DEFAULT_ADMIN)); // default admin/admin
-                            ins.setString(3, ROLE_ADMIN);
-                            ins.executeUpdate();
+            try (Connection connection = ds.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(SQL_COUNT_ADMIN)) {
+                statement.setString(1, DEFAULT_ADMIN);
+                try (ResultSet rows = statement.executeQuery()) {
+                    rows.next();
+                    if (rows.getInt(1) == 0) {
+                        try (PreparedStatement insert = connection.prepareStatement(SQL_INSERT_USER)) {
+                            insert.setString(1, DEFAULT_ADMIN);
+                            insert.setString(2, PasswordUtil.hashPassword(DEFAULT_ADMIN));
+                            insert.setString(3, ROLE_ADMIN);
+                            insert.executeUpdate();
                         }
                         ctx.log(LOG_ADMIN_CREATED);
                     }
                 }
             }
-            // put the datasource into the servlet context for DAOs to use
             ctx.setAttribute(CONTEXT_DATASOURCE, ds);
-        } catch (Throwable e) {
-            // If we can't initialize DB, log but do not rethrow (so app can still deploy)
-            ctx.log(LOG_SCHEMA_INIT_FAIL + e.getMessage(), e);
-            // Ensure datasource is still available (it may be in-memory or partially initialized)
-            ctx.setAttribute(CONTEXT_DATASOURCE, ds);
+        } catch (IOException | SQLException | RuntimeException exception) {
+            ctx.log(LOG_INIT_FAIL, exception);
+            throw new IllegalStateException(LOG_INIT_FAIL, exception);
         }
     }
 

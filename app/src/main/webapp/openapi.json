@@ -11,9 +11,106 @@
     { "name": "Calculator" },
     { "name": "Session" },
     { "name": "Administration" },
-    { "name": "Number Guess" }
+    { "name": "Number Guess" },
+    { "name": "Calendar" }
   ],
   "paths": {
+    "/calendar": {
+      "get": {
+        "tags": ["Calendar"],
+        "operationId": "getCalendar",
+        "summary": "View or export the signed-in user's private calendar",
+        "description": "Uses persisted time zone, week start, and default view preferences. Supports month/agenda views, private history, notifications, and import preview. Export returns an iCalendar attachment. Calendar requests also refresh due in-app reminders.",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "description": "Optional month from 0001-01 through 9999-12.",
+            "schema": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$" },
+            "example": "2026-10"
+          },
+          { "name": "view", "in": "query", "schema": { "type": "string", "enum": ["month", "agenda", "history", "notifications", "settings", "import"] } },
+          { "name": "q", "in": "query", "schema": { "type": "string", "maxLength": 200 }, "description": "Case-insensitive title/description search." },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Inclusive end; search range is limited to 366 days." },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 10000 }, "description": "Zero-based agenda/history page." },
+          { "name": "edit", "in": "query", "schema": { "type": "string" }, "description": "Event ID or new." },
+          { "name": "occurrence", "in": "query", "schema": { "type": "string" }, "description": "Original event-local occurrence start, e.g. 2026-10-23T10:00." },
+          { "name": "export", "in": "query", "schema": { "type": "string" }, "description": "all or an owned event ID; returns text/calendar." }
+        ],
+        "responses": {
+          "200": { "description": "Calendar HTML or iCalendar download.", "content": { "text/html": { "schema": { "type": "string" } }, "text/calendar": { "schema": { "type": "string" } } } },
+          "302": { "$ref": "#/components/responses/LoginRedirect" },
+          "400": { "description": "Invalid month." },
+          "401": { "description": "No authenticated user is available." },
+          "404": { "description": "Event is absent or belongs to another account." },
+          "503": { "description": "Calendar database storage is unavailable." }
+        }
+      }
+    },
+    "/calendar/action": {
+      "post": {
+        "tags": ["Calendar"],
+        "operationId": "changePrivateCalendar",
+        "summary": "Change events/preferences, preview or confirm imports, or mark reminders read",
+        "description": "Requires the csrf hidden field from the current session's calendar HTML. Ownership always comes from the authenticated session. Save requires title, startDate/endDate, time fields unless allDay=on, and zoneId. Updates/deletes require id/version. Recurrence supports daily/weekly/monthly with count or until. Deletes require confirm=on. Upload action preview accepts a file, then import requires previewId from the session's preview form. All successful actions use Post/Redirect/Get.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["action", "csrf"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["save", "delete", "preferences", "read", "import", "cancelImport"] },
+                  "csrf": { "type": "string" },
+                  "month": { "type": "string", "example": "2026-10" },
+                  "id": { "type": "integer", "format": "int64", "minimum": 0 },
+                  "version": { "type": "integer", "format": "int64", "minimum": 1 },
+                  "title": { "type": "string", "maxLength": 200 },
+                  "description": { "type": "string", "maxLength": 5000 },
+                  "startDate": { "type": "string", "format": "date" },
+                  "endDate": { "type": "string", "format": "date", "description": "Inclusive last day for all-day events." },
+                  "startTime": { "type": "string", "example": "10:00" },
+                  "endTime": { "type": "string", "example": "11:00" },
+                  "zoneId": { "type": "string", "example": "America/New_York" },
+                  "allDay": { "type": "string", "enum": ["on"] },
+                  "frequency": { "type": "string", "enum": ["NONE", "DAILY", "WEEKLY", "MONTHLY"] },
+                  "endMode": { "type": "string", "enum": ["count", "until"] },
+                  "count": { "type": "integer", "minimum": 1, "maximum": 999 },
+                  "until": { "type": "string", "format": "date" },
+                  "reminder": { "type": "integer", "minimum": -1, "maximum": 10080, "description": "Minutes before start; -1 disables reminders." },
+                  "scope": { "type": "string", "enum": ["series", "occurrence"] },
+                  "occurrence": { "type": "string", "example": "2026-10-23T10:00" },
+                  "confirm": { "type": "string", "enum": ["on"] },
+                  "weekStart": { "type": "integer", "enum": [1, 7] },
+                  "defaultView": { "type": "string", "enum": ["month", "agenda"] },
+                  "previewId": { "type": "string" }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": { "type": "object", "required": ["action", "csrf", "file"], "properties": {
+                "action": { "type": "string", "enum": ["preview"] },
+                "csrf": { "type": "string" },
+                "file": { "type": "string", "format": "binary", "description": "iCalendar document, at most 256 KiB and 200 events." }
+              } }
+            }
+          }
+        },
+        "responses": {
+          "303": { "description": "Change committed; redirects to the calendar." },
+          "302": { "$ref": "#/components/responses/LoginRedirect" },
+          "400": { "description": "Invalid form or unsupported calendar data; no change committed." },
+          "401": { "description": "Authentication required." },
+          "403": { "description": "Missing or incorrect session CSRF token." },
+          "404": { "description": "Event or notification is not owned by the authenticated account." },
+          "409": { "description": "Stale event version or conflicting update." },
+          "413": { "description": "Request/upload exceeds its size limit." },
+          "503": { "description": "Calendar database is unavailable." }
+        }
+      }
+    },
     "/api/calc": {
       "get": {
         "tags": ["Calculator"],

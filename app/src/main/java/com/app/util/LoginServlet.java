@@ -56,7 +56,7 @@ public class LoginServlet extends HttpServlet {
             String storedHash = UserDataService.findPasswordHashByUsername(req.getServletContext(), user);
             if (storedHash != null && PasswordUtil.verify(pass, storedHash)) {
                 HttpSession session = req.getSession(true);
-                session.setAttribute("user", user);
+                session.setAttribute(com.app.util.AppWebConstants.USER_KEY, user);
                 session.setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
 
                 // if remember checked -> create token
@@ -91,7 +91,7 @@ public class LoginServlet extends HttpServlet {
 
     private void renderLogin(HttpServletRequest req, HttpServletResponse resp, String redirect, String message) {
         Map<String, String> values = new HashMap<>();
-        values.put("ctx", TemplateRenderer.escapeHtml(req.getContextPath()));
+        values.put(com.app.util.AppWebConstants.CONTEXT_KEY, TemplateRenderer.escapeHtml(req.getContextPath()));
         values.put("message", TemplateRenderer.escapeHtml(message));
         values.put("redirect", TemplateRenderer.escapeHtml(redirect == null ? "" : redirect));
 
