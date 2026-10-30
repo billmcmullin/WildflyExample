@@ -26,6 +26,7 @@ import jakarta.servlet.annotation.WebListener;
 @WebListener
 public class DatabaseInitListener implements ServletContextListener {
     private static final String TEXT_DATABASE_DIRECTORY = "database.directory";
+    private static final String SERVER_DATA_DIRECTORY = "jboss.server.data.dir";
     private static final String TEXT_DATABASE_INIT_LISTENER_APPLIED = "DatabaseInitListener: applied ";
     private static final String TEXT_SCHEMA_MIGRATIONS = " schema migrations";
 
@@ -55,9 +56,8 @@ public class DatabaseInitListener implements ServletContextListener {
         JDBCDataSource ds = new JDBCDataSource();
 
         try {
-            String configuredDirectory = ctx.getInitParameter(DatabaseInitListener.TEXT_DATABASE_DIRECTORY);
-            Path dataDir = configuredDirectory == null || configuredDirectory.isBlank()
-                    ? Path.of(BASE_DIR).resolve(DATA_DIR) : Path.of(configuredDirectory);
+                Path dataDir = resolveDataDirectory(ctx.getInitParameter(TEXT_DATABASE_DIRECTORY),
+                    System.getProperty(TEXT_DATABASE_DIRECTORY), System.getProperty(SERVER_DATA_DIRECTORY));
             Files.createDirectories(dataDir);
             String dbUrl = DB_URL_FILE_PREFIX + dataDir.resolve(DB_NAME).toAbsolutePath() + DB_URL_SUFFIX;
             ds.setUrl(dbUrl);
@@ -94,6 +94,18 @@ public class DatabaseInitListener implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         // nothing special to do for file-based HSQLDB here
+    }
+
+    static Path resolveDataDirectory(String contextDirectory, String jvmDirectory, String serverDirectory) {
+        if (contextDirectory != null && !contextDirectory.isBlank()) {
+            return Path.of(contextDirectory);
+        }
+        if (jvmDirectory != null && !jvmDirectory.isBlank()) {
+            return Path.of(jvmDirectory);
+        }
+        Path base = serverDirectory == null || serverDirectory.isBlank()
+                ? Path.of(BASE_DIR) : Path.of(serverDirectory).resolve(BASE_DIR);
+        return base.resolve(DATA_DIR);
     }
 
     private final void writeObject(ObjectOutputStream out) throws IOException {

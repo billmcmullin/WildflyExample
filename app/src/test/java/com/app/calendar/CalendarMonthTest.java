@@ -1,17 +1,21 @@
 package com.app.calendar;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
 
-class CalendarMonthTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+class CalendarMonthTest
+{
 
     @Test
-    void defaultsToCurrentMonthAndMarksOnlyToday() {
+    void defaultsToCurrentMonthAndMarksOnlyToday()
+    {
         CalendarMonth calendar = CalendarMonth.from(null, LocalDate.of(2026, 10, 23));
         assertEquals(YearMonth.of(2026, 10), calendar.month());
         assertEquals("October 2026", calendar.label());
@@ -22,7 +26,8 @@ class CalendarMonthTest {
     }
 
     @Test
-    void supportsLeapYearsAndSundayStarts() {
+    void supportsLeapYearsAndSundayStarts()
+    {
         LocalDate today = LocalDate.of(2026, 10, 23);
         assertEquals(29, CalendarMonth.from("2024-02", today).dayCount());
         assertEquals(28, CalendarMonth.from("2025-02", today).dayCount());
@@ -31,7 +36,8 @@ class CalendarMonthTest {
     }
 
     @Test
-    void handlesYearTransitionsAndRejectsInvalidMonths() {
+    void handlesYearTransitionsAndRejectsInvalidMonths()
+    {
         LocalDate today = LocalDate.of(2026, 1, 1);
         CalendarMonth calendar = CalendarMonth.from("2026-01", today);
         assertEquals("2025-12", calendar.month().minusMonths(1).toString());
@@ -40,4 +46,5 @@ class CalendarMonthTest {
         assertThrows(DateTimeParseException.class, () -> CalendarMonth.from("<script>", today));
         assertThrows(IllegalArgumentException.class, () -> CalendarMonth.from("0000-01", today));
     }
+
 }

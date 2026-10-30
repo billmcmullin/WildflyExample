@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
 
 import jakarta.servlet.ServletContext;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
@@ -75,4 +78,62 @@ public class TemplateRendererTest
         });
 
     }
+
+    /**
+     * Parasoft Jtest UTA: Test for escapeHtml(String)
+     *
+     * @see com.app.util.TemplateRenderer#escapeHtml(String)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testEscapeHtml3() throws Throwable
+    {
+        // When
+        String s = "&"; // UTA: configured value
+        String result = TemplateRenderer.escapeHtml(s);
+
+        // Then - assertions for result of method escapeHtml(String)
+        assertEquals("&amp;", result);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for escapeHtml(String)
+     *
+     * @see com.app.util.TemplateRenderer#escapeHtml(String)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testEscapeHtml4() throws Throwable
+    {
+        // When
+        String s = "<"; // UTA: configured value
+        String result = TemplateRenderer.escapeHtml(s);
+
+        // Then - assertions for result of method escapeHtml(String)
+        assertEquals("&lt;", result);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for escapeHtml(String)
+     *
+     * @see com.app.util.TemplateRenderer#escapeHtml(String)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testEscapeHtml5() throws Throwable
+    {
+        // When
+        String s = ">"; // UTA: configured value
+        String result = TemplateRenderer.escapeHtml(s);
+
+        // Then - assertions for result of method escapeHtml(String)
+        assertEquals("&gt;", result);
+
+    }
+
 }

@@ -1,24 +1,33 @@
 package com.app.calendar;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 
+import javax.sql.DataSource;
+
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
 import org.junit.jupiter.api.io.TempDir;
 
-class CalendarDaoTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+class CalendarDaoTest
+{
 
     @TempDir
     Path directory;
 
     @Test
-    void calendarsAreUserScopedIdempotentAndPersistAcrossDatabaseRestart() throws Exception {
+    void calendarsAreUserScopedIdempotentAndPersistAcrossDatabaseRestart() throws Exception
+    {
         JDBCDataSource dataSource = new JDBCDataSource();
         dataSource.setUrl("jdbc:hsqldb:file:" + directory.resolve("calendars"));
         dataSource.setUser("sa");
@@ -53,4 +62,5 @@ class CalendarDaoTest {
             statement.execute("SHUTDOWN");
         }
     }
+
 }

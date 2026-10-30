@@ -2,8 +2,11 @@ package com.app.calculator;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Parasoft Jtest UTA: Test class for CalculatorService
  *

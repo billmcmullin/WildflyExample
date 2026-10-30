@@ -3,17 +3,23 @@ package com.app.game.numberguess;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
 
 import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 /**
  * Parasoft Jtest UTA: Test class for NumberGuessServlet
  *
@@ -473,6 +479,73 @@ public class NumberGuessServletTest
         when(getSessionResult.getAttribute(nullable(String.class))).thenReturn(getAttributeResult, getAttributeResult2, getAttributeResult3, getAttributeResult4, getAttributeResult5, getAttributeResult6, getAttributeResult7);
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
         HttpServletResponse resp = mock(HttpServletResponse.class);
+        underTest.doPost(req, resp);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.app.game.numberguess.NumberGuessServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testDoPost4() throws Throwable
+    {
+        // Given
+        NumberGuessServlet underTest = new NumberGuessServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        HttpSession getSessionResult = mock(HttpSession.class);
+        Object getAttributeResult = null; // UTA: configured value
+        Object getAttributeResult2 = null; // UTA: configured value
+        Integer getAttributeResult3 = 1; // UTA: default value
+        Integer getAttributeResult4 = 1; // UTA: default value
+        Integer getAttributeResult5 = 1; // UTA: default value
+        Integer getAttributeResult6 = 1; // UTA: default value
+        Object getAttributeResult7 = new Object(); // UTA: default value
+        when(getSessionResult.getAttribute(nullable(String.class))).thenReturn(getAttributeResult, getAttributeResult2, getAttributeResult3, getAttributeResult4, getAttributeResult5, getAttributeResult6, getAttributeResult7);
+        when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        underTest.doPost(req, resp);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.app.game.numberguess.NumberGuessServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testDoPost5() throws Throwable
+    {
+        // Given
+        NumberGuessServlet underTest = new NumberGuessServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        HttpSession getSessionResult = mock(HttpSession.class);
+        Object getAttributeResult = new Object(); // UTA: default value
+        Object getAttributeResult2 = null; // UTA: configured value
+        Integer getAttributeResult3 = 1; // UTA: default value
+        Integer getAttributeResult4 = 1; // UTA: default value
+        Integer getAttributeResult5 = 1; // UTA: default value
+        Integer getAttributeResult6 = 1; // UTA: default value
+        Object getAttributeResult7 = null; // UTA: configured value
+        when(getSessionResult.getAttribute(nullable(String.class))).thenReturn(getAttributeResult, getAttributeResult2, getAttributeResult3, getAttributeResult4, getAttributeResult5, getAttributeResult6, getAttributeResult7);
+        when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        doThrow(IOException.class).when(resp).sendRedirect(nullable(String.class));
         underTest.doPost(req, resp);
 
     }

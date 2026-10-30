@@ -1,21 +1,36 @@
 package com.app.dao;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
+
+import javax.sql.DataSource;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
 
 import com.app.support.JdbcTestSupport;
 
-class UserDaoTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+class UserDaoTest
+{
 
     @Test
-    void findPasswordHashAndRoleByUsername() throws Exception {
+    void findPasswordHashAndRoleByUsername() throws Exception
+    {
         JDBCDataSource ds = JdbcTestSupport.newDataSource();
         JdbcTestSupport.insertUser(ds, "alice", "hash1", "ADMIN");
 
@@ -27,7 +42,8 @@ class UserDaoTest {
     }
 
     @Test
-    void createUserDefaultsRoleToUser() throws Exception {
+    void createUserDefaultsRoleToUser() throws Exception
+    {
         JDBCDataSource ds = JdbcTestSupport.newDataSource();
         UserDao dao = new UserDao(ds);
 
@@ -36,7 +52,8 @@ class UserDaoTest {
     }
 
     @Test
-    void createRememberTokenAndFindUsernameByToken() throws Exception {
+    void createRememberTokenAndFindUsernameByToken() throws Exception
+    {
         JDBCDataSource ds = JdbcTestSupport.newDataSource();
         UserDao dao = new UserDao(ds);
         long future = Instant.now().toEpochMilli() + 60_000L;
@@ -46,7 +63,8 @@ class UserDaoTest {
     }
 
     @Test
-    void findUsernameByTokenDeletesExpiredToken() throws Exception {
+    void findUsernameByTokenDeletesExpiredToken() throws Exception
+    {
         JDBCDataSource ds = JdbcTestSupport.newDataSource();
         UserDao dao = new UserDao(ds);
 
@@ -57,7 +75,8 @@ class UserDaoTest {
     }
 
     @Test
-    void deleteAndCleanupTokenMethods() throws Exception {
+    void deleteAndCleanupTokenMethods() throws Exception
+    {
         JDBCDataSource ds = JdbcTestSupport.newDataSource();
         UserDao dao = new UserDao(ds);
         long now = Instant.now().toEpochMilli();
@@ -73,4 +92,5 @@ class UserDaoTest {
         dao.cleanExpiredTokens();
         assertEquals(0, JdbcTestSupport.countTokensForUser(ds, "alice"));
     }
+
 }

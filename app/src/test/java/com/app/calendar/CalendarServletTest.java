@@ -1,10 +1,5 @@
 package com.app.calendar;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.MockMakers.PROXY;
-import static org.mockito.Mockito.*;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,12 +13,15 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import com.app.database.DatabaseMigrations;
-import com.app.support.JdbcTestSupport;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
+
+import com.app.database.DatabaseMigrations;
+import com.app.support.JdbcTestSupport;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletOutputStream;
@@ -32,7 +30,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-class CalendarServletTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.MockMakers.PROXY;
+import static org.mockito.Mockito.*;
+class CalendarServletTest
+{
 
     private HttpServletRequest request;
     private HttpServletResponse response;
@@ -42,7 +45,8 @@ class CalendarServletTest {
     private Map<String, String> parameters;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() throws Exception
+    {
         request = mock(HttpServletRequest.class, withSettings().mockMaker(PROXY));
         response = mock(HttpServletResponse.class, withSettings().mockMaker(PROXY));
         context = mock(ServletContext.class, withSettings().mockMaker(PROXY));
@@ -54,41 +58,51 @@ class CalendarServletTest {
         when(request.getMethod()).thenReturn("GET");
         Map<String, Object> requestAttributes = new HashMap<>();
         when(request.getAttribute(anyString())).thenAnswer(invocation -> requestAttributes.get(invocation.getArgument(0)));
-        doAnswer(invocation -> { requestAttributes.put(invocation.getArgument(0), invocation.getArgument(1)); return null; })
-            .when(request).setAttribute(anyString(), any());
+        doAnswer(invocation -> {
+            requestAttributes.put(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(request).setAttribute(anyString(), any());
         HttpSession session = mock(HttpSession.class, withSettings().mockMaker(PROXY));
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("user", "alice");
         when(session.getAttribute(anyString())).thenAnswer(invocation -> attributes.get(invocation.getArgument(0)));
-        doAnswer(invocation -> { attributes.put(invocation.getArgument(0), invocation.getArgument(1)); return null; })
-            .when(session).setAttribute(anyString(), any());
-        doAnswer(invocation -> { attributes.remove(invocation.getArgument(0)); return null; }).when(session).removeAttribute(anyString());
+        doAnswer(invocation -> {
+            attributes.put(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(session).setAttribute(anyString(), any());
+        doAnswer(invocation -> {
+            attributes.remove(invocation.getArgument(0));
+            return null;
+        }).when(session).removeAttribute(anyString());
         when(request.getContextPath()).thenReturn("/app");
         when(request.getServletContext()).thenReturn(context);
         when(request.getSession(false)).thenReturn(session);
         when(context.getAttribute("datasource")).thenReturn(dataSource);
-        when(context.getResourceAsStream("/WEB-INF/templates/calendar.html")).thenAnswer(invocation ->
-                Files.newInputStream(Path.of("src/main/webapp/WEB-INF/templates/calendar.html")));
+        when(context.getResourceAsStream("/WEB-INF/templates/calendar.html")).thenAnswer(invocation -> Files.newInputStream(Path.of("src/main/webapp/WEB-INF/templates/calendar.html")));
         output = new ByteArrayOutputStream();
         when(response.getOutputStream()).thenReturn(new ServletOutputStream() {
             @Override
-            public void write(int value) {
+            public void write(int value)
+            {
                 output.write(value);
             }
 
             @Override
-            public boolean isReady() {
+            public boolean isReady()
+            {
                 return true;
             }
 
             @Override
-            public void setWriteListener(WriteListener listener) {
+            public void setWriteListener(WriteListener listener)
+            {
             }
         });
     }
 
     @Test
-    void rendersCurrentMonthTodayAndContextRelativeNavigation() throws IOException, SQLException {
+    void rendersCurrentMonthTodayAndContextRelativeNavigation() throws IOException, SQLException
+    {
         new CalendarServlet().doGet(request, response);
         String html = output.toString(StandardCharsets.UTF_8);
         assertTrue(html.contains("datetime=\"" + LocalDate.now() + "\""));
@@ -103,8 +117,9 @@ class CalendarServletTest {
     }
 
     @Test
-    void rendersLeapMonthAndYearBoundaryLinks() throws IOException {
-        when(request.getParameterValues("month")).thenReturn(new String[] {"2024-02"});
+    void rendersLeapMonthAndYearBoundaryLinks() throws IOException
+    {
+        when(request.getParameterValues("month")).thenReturn(new String[]{"2024-02"});
         new CalendarServlet().doGet(request, response);
         String html = output.toString(StandardCharsets.UTF_8);
         assertTrue(html.contains("February 2024"));
@@ -115,15 +130,17 @@ class CalendarServletTest {
     }
 
     @Test
-    void rejectsInvalidMonthBeforeAccessingDatabase() throws IOException {
-        when(request.getParameterValues("month")).thenReturn(new String[] {"2026-99"});
+    void rejectsInvalidMonthBeforeAccessingDatabase() throws IOException
+    {
+        when(request.getParameterValues("month")).thenReturn(new String[]{"2026-99"});
         new CalendarServlet().doGet(request, response);
         verify(response).sendError(eq(400), anyString());
         verify(context, never()).getAttribute("datasource");
     }
 
     @Test
-    void requiresAuthenticatedSession() throws IOException {
+    void requiresAuthenticatedSession() throws IOException
+    {
         when(request.getSession(false)).thenReturn(null);
         new CalendarServlet().doGet(request, response);
         verify(response).sendError(eq(401), anyString());
@@ -131,7 +148,8 @@ class CalendarServletTest {
     }
 
     @Test
-    void reportsUnavailableStorageWithoutRenderingSuccess() throws Exception {
+    void reportsUnavailableStorageWithoutRenderingSuccess() throws Exception
+    {
         DataSource unavailable = mock(DataSource.class, withSettings().mockMaker(PROXY));
         when(unavailable.getConnection()).thenThrow(new SQLException("database unavailable"));
         when(context.getAttribute("datasource")).thenReturn(unavailable);
@@ -142,14 +160,16 @@ class CalendarServletTest {
     }
 
     @Test
-    void reportsMissingDatasource() throws IOException {
+    void reportsMissingDatasource() throws IOException
+    {
         when(context.getAttribute("datasource")).thenReturn(null);
         new CalendarServlet().doGet(request, response);
         verify(response).sendError(eq(503), anyString());
     }
 
     @Test
-    void escapesSessionUsername() throws Exception {
+    void escapesSessionUsername() throws Exception
+    {
         HttpSession session = request.getSession(false);
         JdbcTestSupport.insertUser(dataSource, "<img src=x onerror=alert(1)>", "hash", "USER");
         when(session.getAttribute("user")).thenReturn("<img src=x onerror=alert(1)>");
@@ -160,14 +180,16 @@ class CalendarServletTest {
     }
 
     @AfterEach
-    void closeDatabase() throws Exception {
+    void closeDatabase() throws Exception
+    {
         try (Connection connection = dataSource.getConnection(); java.sql.Statement statement = connection.createStatement()) {
             statement.execute("SHUTDOWN");
         }
     }
 
     @Test
-    void calendarWritesRequireCsrf() throws Exception {
+    void calendarWritesRequireCsrf() throws Exception
+    {
         parameters.put("action", "save");
         new CalendarActionsServlet().doPost(request, response);
         verify(response).sendError(eq(403), anyString());
@@ -175,7 +197,8 @@ class CalendarServletTest {
     }
 
     @Test
-    void createsUpdatesRejectsStaleWritesAndDeletesUsingAuthenticatedOwner() throws Exception {
+    void createsUpdatesRejectsStaleWritesAndDeletesUsingAuthenticatedOwner() throws Exception
+    {
         eventParameters();
         parameters.put("username", "bob");
         new CalendarActionsServlet().doPost(request, response);
@@ -200,7 +223,8 @@ class CalendarServletTest {
     }
 
     @Test
-    void rejectsAnotherAccountsEventEvenWithValidCsrf() throws Exception {
+    void rejectsAnotherAccountsEventEvenWithValidCsrf() throws Exception
+    {
         eventParameters();
         new CalendarActionsServlet().doPost(request, response);
         long id = new CalendarStore(dataSource).events("alice").get(0).id();
@@ -214,7 +238,8 @@ class CalendarServletTest {
     }
 
     @Test
-    void savesPreferencesAndUsesThePreferredDefaultView() throws Exception {
+    void savesPreferencesAndUsesThePreferredDefaultView() throws Exception
+    {
         parameters.put("csrf", CalendarSecurity.token(request.getSession(false)));
         parameters.put("action", "preferences");
         parameters.put("zoneId", "Europe/London");
@@ -227,7 +252,8 @@ class CalendarServletTest {
         assertTrue(output.toString(StandardCharsets.UTF_8).contains("aria-current=\"page\">Agenda</a>"));
     }
 
-    private void eventParameters() {
+    private void eventParameters()
+    {
         when(request.getMethod()).thenReturn("POST");
         parameters.put("csrf", CalendarSecurity.token(request.getSession(false)));
         parameters.put("action", "save");
@@ -241,7 +267,8 @@ class CalendarServletTest {
     }
 
     @Test
-    void invalidEventKeepsEnteredFieldsAndDoesNotWrite() throws Exception {
+    void invalidEventKeepsEnteredFieldsAndDoesNotWrite() throws Exception
+    {
         eventParameters();
         parameters.put("title", "Keep this title");
         parameters.put("endTime", "09:00");
@@ -252,9 +279,9 @@ class CalendarServletTest {
     }
 
     @Test
-    void importRequiresPreviewAndExplicitConfirmation() throws Exception {
-        String document = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nUID:upload-id\r\n"
-                + "DTSTAMP:20261023T000000Z\r\nDTSTART:20261023T100000Z\r\nDTEND:20261023T110000Z\r\nSUMMARY:Uploaded event\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+    void importRequiresPreviewAndExplicitConfirmation() throws Exception
+    {
+        String document = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nUID:upload-id\r\n" + "DTSTAMP:20261023T000000Z\r\nDTSTART:20261023T100000Z\r\nDTEND:20261023T110000Z\r\nSUMMARY:Uploaded event\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
         byte[] bytes = document.getBytes(StandardCharsets.UTF_8);
         jakarta.servlet.http.Part file = mock(jakarta.servlet.http.Part.class, withSettings().mockMaker(PROXY));
         when(file.getSize()).thenReturn((long) bytes.length);
@@ -273,10 +300,12 @@ class CalendarServletTest {
     }
 
     @Test
-    void templateReadFailuresReturnControlledErrors() throws Exception {
+    void templateReadFailuresReturnControlledErrors() throws Exception
+    {
         when(context.getResourceAsStream("/WEB-INF/templates/calendar.html")).thenReturn(new java.io.InputStream() {
             @Override
-            public int read() throws IOException {
+            public int read() throws IOException
+            {
                 throw new IOException("Internal template path must not be exposed");
             }
         });
@@ -286,11 +315,12 @@ class CalendarServletTest {
     }
 
     @Test
-    void requestEncodingFailureIsHandledInsideTheServlet() throws Exception {
-        doThrow(new java.io.UnsupportedEncodingException("Internal encoding detail"))
-                .when(request).setCharacterEncoding("UTF-8");
+    void requestEncodingFailureIsHandledInsideTheServlet() throws Exception
+    {
+        doThrow(new java.io.UnsupportedEncodingException("Internal encoding detail")).when(request).setCharacterEncoding("UTF-8");
         new CalendarActionsServlet().doPost(request, response);
         verify(response).sendError(500, "Calendar request is unavailable");
         assertTrue(new CalendarStore(dataSource).events("alice").isEmpty());
     }
+
 }
