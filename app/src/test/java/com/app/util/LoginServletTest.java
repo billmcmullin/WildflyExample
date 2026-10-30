@@ -8,15 +8,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
 
 import com.app.support.JdbcTestSupport;
 
@@ -27,6 +20,18 @@ import jakarta.servlet.WriteListener;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 /**
  * Parasoft Jtest UTA: Test class for LoginServlet
  *
@@ -49,10 +54,10 @@ public class LoginServletTest
         JdbcTestSupport.insertUser(ds, "alice", PasswordUtil.hashPassword("pw"), "USER");
 
         when(req.getContextPath()).thenReturn("/app");
-        when(req.getParameterValues("username")).thenReturn(new String[] { "alice" });
-        when(req.getParameterValues("password")).thenReturn(new String[] { "pw" });
+        when(req.getParameterValues("username")).thenReturn(new String[]{"alice"});
+        when(req.getParameterValues("password")).thenReturn(new String[]{"pw"});
         when(req.getParameterValues("redirect")).thenReturn(null);
-        when(req.getParameterValues("remember")).thenReturn(new String[] { "on" });
+        when(req.getParameterValues("remember")).thenReturn(new String[]{"on"});
         when(req.getServletContext()).thenReturn(ctx);
         when(ctx.getAttribute("datasource")).thenReturn(ds);
         when(req.getSession(true)).thenReturn(session);
@@ -72,15 +77,7 @@ public class LoginServletTest
     {
         JDBCDataSource ds = JdbcTestSupport.newDataSource();
         JdbcTestSupport.insertUser(ds, "alice", PasswordUtil.hashPassword("pw"), "USER");
-        String[][] scenarios = {
-                { "/app", null, "/app/home" },
-                { "/app", "", "/app/home" },
-                { "", null, "/home" },
-                { "/custom", null, "/custom/home" },
-                { "/app", "/app/swagger-ui.html", "/app/swagger-ui.html" },
-                { "/app", "/home", "/app/home" },
-                { "/app", "https://example.org", "/app/home" },
-                { "/app", "//example.org", "/app/home" }
+        String[][] scenarios = {{"/app", null, "/app/home"}, {"/app", "", "/app/home"}, {"", null, "/home"}, {"/custom", null, "/custom/home"}, {"/app", "/app/swagger-ui.html", "/app/swagger-ui.html"}, {"/app", "/home", "/app/home"}, {"/app", "https://example.org", "/app/home"}, {"/app", "//example.org", "/app/home"}
         };
 
         for (String[] scenario : scenarios) {
@@ -115,14 +112,13 @@ public class LoginServletTest
         JdbcTestSupport.insertUser(ds, "alice", PasswordUtil.hashPassword("right"), "USER");
 
         when(req.getContextPath()).thenReturn("/app");
-        when(req.getParameterValues("username")).thenReturn(new String[] { "alice" });
-        when(req.getParameterValues("password")).thenReturn(new String[] { "wrong" });
-        when(req.getParameterValues("redirect")).thenReturn(new String[] { "/app/home" });
+        when(req.getParameterValues("username")).thenReturn(new String[]{"alice"});
+        when(req.getParameterValues("password")).thenReturn(new String[]{"wrong"});
+        when(req.getParameterValues("redirect")).thenReturn(new String[]{"/app/home"});
         when(req.getParameterValues("remember")).thenReturn(null);
         when(req.getServletContext()).thenReturn(ctx);
         when(ctx.getAttribute("datasource")).thenReturn(ds);
-        when(ctx.getResourceAsStream("/WEB-INF/templates/login.html"))
-                .thenReturn(new ByteArrayInputStream("<p>{{message}}</p>".getBytes(StandardCharsets.UTF_8)));
+        when(ctx.getResourceAsStream("/WEB-INF/templates/login.html")).thenReturn(new ByteArrayInputStream("<p>{{message}}</p>".getBytes(StandardCharsets.UTF_8)));
         when(resp.getOutputStream()).thenReturn(os);
 
         servlet.doPost(req, resp);
@@ -141,8 +137,8 @@ public class LoginServletTest
         ServletContext ctx = mock(ServletContext.class);
 
         when(req.getContextPath()).thenReturn("/app");
-        when(req.getParameterValues("username")).thenReturn(new String[] { "alice" });
-        when(req.getParameterValues("password")).thenReturn(new String[] { "pw" });
+        when(req.getParameterValues("username")).thenReturn(new String[]{"alice"});
+        when(req.getParameterValues("password")).thenReturn(new String[]{"pw"});
         when(req.getParameterValues("redirect")).thenReturn(null);
         when(req.getParameterValues("remember")).thenReturn(null);
         when(req.getServletContext()).thenReturn(ctx);
@@ -310,6 +306,61 @@ public class LoginServletTest
         when(req.getServletContext()).thenReturn(getServletContextResult);
         HttpServletResponse resp = mock(HttpServletResponse.class);
         underTest.doGet(req, resp);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.app.util.LoginServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testDoGet6() throws Throwable
+    {
+        // Given
+        LoginServlet underTest = new LoginServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        ServletContext getServletContextResult = mock(ServletContext.class);
+        InputStream getResourceAsStreamResult = null; // UTA: configured value
+        when(getServletContextResult.getResourceAsStream(nullable(String.class))).thenReturn(getResourceAsStreamResult);
+        when(req.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        doThrow(IOException.class).when(resp).sendError(anyInt(), nullable(String.class));
+        underTest.doGet(req, resp);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.app.util.LoginServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testDoPost() throws Throwable
+    {
+        // Given
+        LoginServlet underTest = new LoginServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        ServletContext getServletContextResult = null; // UTA: configured value
+        when(req.getServletContext()).thenReturn(getServletContextResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        assertThrows(ServletException.class, () -> {
+            underTest.doPost(req, resp);
+        });
 
     }
 

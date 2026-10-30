@@ -155,12 +155,31 @@ RECURRENCE-ID overrides, arbitrary recurrence rules, and non-event calendar
 components are rejected rather than silently dropped. Repeating timed exports
 require UTC or an IANA zone, not a nonzero fixed-offset zone.
 
-The existing database connection is reused. Keep the server's working-directory
-`app-runtime/app-data` folder on persistent, writable storage across restarts and
-deployments. The `database.directory` servlet context parameter can override
-that directory. Startup fails if persistent storage or schema migration fails;
+The existing database connection is reused. Database directory selection uses
+this precedence:
+
+1. The `database.directory` servlet context parameter.
+2. The `database.directory` JVM system property (`-Ddatabase.directory=...`).
+3. On WildFly, `${jboss.server.data.dir}/app-runtime/app-data`.
+4. On other servers, the working-directory `app-runtime/app-data` folder.
+
+Keep the selected directory on persistent, writable storage across restarts and
+deployments. WildFly containers must not try to create application directories
+under the normally read-only `/opt/jboss` working directory. Startup fails if persistent storage or schema migration fails;
 the application no longer silently falls back to an in-memory database.
 Database errors while serving the calendar return HTTP 503.
+
+The CTP Compose deployment mounts the named `wildfly_personal_data` volume at
+`/opt/jboss/wildfly/standalone/data`. A network-isolated one-shot
+`wildfly-data-init` service sets volume ownership to the image's jboss UID/GID
+1000 before WildFly starts. Only that initializer runs as root; the application
+continues to run as jboss. Recreating WildFly retains the named volume. Do not
+remove this volume when recreating the container.
+
+If an older deployment already has a file database in the legacy location,
+explicitly keep `database.directory` pointed at it, or stop the server, back up
+the entire database directory, and migrate it to the persistent data location.
+The application does not silently relocate an existing database.
 
 ### Database Migrations
 
@@ -268,6 +287,42 @@ For CI validation, omit `-Dmaven.test.failure.ignore=true` and
 `-Dmaven.test.error.ignore=true`. A successful Maven build should not hide
 browser-test failures. Existing CTP lifecycle listeners and baggage headers remain
 enabled by the browser suites.
+
+## Dashboard Browser Coverage
+
+Both suites now cover the six Home navigation links and five Quick links,
+calculator operations and validation, Snake startup/pause/resume/restart,
+Swagger rendering and calculator API success/error responses, administration
+validation, Number Guess input/session behavior, and calendar views plus
+create/search/edit/export/delete/history for single and daily recurring events.
+TestNG additionally checks calendar preference persistence/restoration and
+iCalendar preview cancellation. The original login/calculator/sign-out journey
+remains in both suites.
+
+Use an ADMIN test account for the complete dashboard. Browsers are isolated per
+TestNG invocation or Cucumber scenario. Calendar fixtures use UUID titles;
+cleanup matches exact titles and removes only test-created events/series.
+Preference checks restore the original values in `finally`. Calendar audit
+history intentionally retains the test operations. Admin checks do not create
+permanent accounts: they submit empty fields and an existing username.
+
+The TestNG calendar slice can be selected with `-Dgroups=calendar`; Cucumber's
+calendar scenarios can be selected with `"-Dcucumber.filter.tags=@calendar"`.
+Use the usual module profile and coverage arguments with either filter. Run the
+two suites sequentially when sharing a CTP environment and test account.
+
+These are regression tests, not permission to ignore application failures.
+Number Guess submissions must stay under the configured application context;
+duplicate usernames must produce form validation rather than an HTTP 500.
+The initial expanded-suite run exposed failures in both paths. Do not skip
+those tests or enable Maven failure-ignore flags to make the build green.
+See `target/dashboard-validation/runtime-validation-report.md` for the local
+execution evidence when present.
+
+Coverage is not exhaustive: notification delivery/read state, committing an
+import, weekly/monthly and individual-occurrence recurrence editing, timed/DST
+events, pagination, non-admin authorization, and successful user creation are
+not covered by these browser journeys.
 
 ## Run Selenium + Cucumber (TestNG) + Parasoft Coverage
 

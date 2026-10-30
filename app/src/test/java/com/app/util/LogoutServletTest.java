@@ -1,17 +1,24 @@
 package com.app.util;
 
+import java.io.IOException;
+
 import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 /**
  * Parasoft Jtest UTA: Test class for LogoutServlet
  *
@@ -24,7 +31,7 @@ public class LogoutServletTest
     @Test
     public void signOutRedirectPreservesDeploymentContext() throws Exception
     {
-        for (String contextPath : new String[] { "/app", "", "/custom" }) {
+        for (String contextPath : new String[]{"/app", "", "/custom"}) {
             HttpServletRequest req = mock(HttpServletRequest.class);
             HttpServletResponse resp = mock(HttpServletResponse.class);
             HttpSession session = mock(HttpSession.class);
@@ -360,4 +367,65 @@ public class LogoutServletTest
         underTest.doGet(req, resp);
 
     }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testDoGet13() throws Throwable
+    {
+        // Given
+        LogoutServlet underTest = new LogoutServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        Cookie[] getCookiesResult = null; // UTA: configured value
+        when(req.getCookies()).thenReturn(getCookiesResult);
+
+        HttpSession getSessionResult = null; // UTA: configured value
+        when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        doThrow(IOException.class).when(resp).sendRedirect(nullable(String.class));
+        underTest.doGet(req, resp);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.app.util.LogoutServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testDoGet14() throws Throwable
+    {
+        // Given
+        LogoutServlet underTest = new LogoutServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = null; // UTA: configured value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        Cookie[] getCookiesResult = null; // UTA: configured value
+        when(req.getCookies()).thenReturn(getCookiesResult);
+
+        HttpSession getSessionResult = null; // UTA: configured value
+        when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        doThrow(IOException.class).when(resp).sendError(anyInt(), nullable(String.class));
+
+        doThrow(IOException.class).when(resp).sendRedirect(nullable(String.class));
+        underTest.doGet(req, resp);
+
+    }
+
 }

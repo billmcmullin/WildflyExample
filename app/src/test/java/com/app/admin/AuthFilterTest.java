@@ -1,28 +1,35 @@
 package com.app.admin;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import java.io.IOException;
 import java.time.Instant;
 
-import org.junit.jupiter.api.Test;
-
 import org.hsqldb.jdbc.JDBCDataSource;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
 
 import com.app.support.JdbcTestSupport;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-class AuthFilterTest {
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+class AuthFilterTest
+{
 
     @Test
-    void allowsLoginPathWithoutAuthentication() throws Exception {
+    void allowsLoginPathWithoutAuthentication() throws Exception
+    {
         AuthFilter filter = new AuthFilter();
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
@@ -37,7 +44,8 @@ class AuthFilterTest {
     }
 
     @Test
-    void redirectsAnonymousUserToLoginWhenNoRememberCookie() throws Exception {
+    void redirectsAnonymousUserToLoginWhenNoRememberCookie() throws Exception
+    {
         AuthFilter filter = new AuthFilter();
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
@@ -54,7 +62,8 @@ class AuthFilterTest {
     }
 
     @Test
-    void keepsLoggedInUser() throws Exception {
+    void keepsLoggedInUser() throws Exception
+    {
         AuthFilter filter = new AuthFilter();
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
@@ -72,7 +81,8 @@ class AuthFilterTest {
     }
 
     @Test
-    void autoLogsInFromRememberCookie() throws Exception {
+    void autoLogsInFromRememberCookie() throws Exception
+    {
         AuthFilter filter = new AuthFilter();
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
@@ -87,7 +97,7 @@ class AuthFilterTest {
         when(req.getRequestURI()).thenReturn("/app/home");
         when(req.getSession(false)).thenReturn(session);
         when(session.getAttribute("user")).thenReturn(null);
-        when(req.getCookies()).thenReturn(new Cookie[] { new Cookie("remember", "tok123") });
+        when(req.getCookies()).thenReturn(new Cookie[]{new Cookie("remember", "tok123")});
         when(req.getServletContext()).thenReturn(servletContext);
         when(servletContext.getAttribute("datasource")).thenReturn(ds);
 
@@ -101,7 +111,8 @@ class AuthFilterTest {
     }
 
     @Test
-    void rememberTokenFailureFallsBackToLoginRedirect() throws Exception {
+    void rememberTokenFailureFallsBackToLoginRedirect() throws Exception
+    {
         AuthFilter filter = new AuthFilter();
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
@@ -113,7 +124,7 @@ class AuthFilterTest {
         when(req.getRequestURI()).thenReturn("/app/home");
         when(req.getSession(false)).thenReturn(session);
         when(session.getAttribute("user")).thenReturn(null);
-        when(req.getCookies()).thenReturn(new Cookie[] { new Cookie("remember", "tok123") });
+        when(req.getCookies()).thenReturn(new Cookie[]{new Cookie("remember", "tok123")});
         when(req.getServletContext()).thenReturn(servletContext);
         when(servletContext.getAttribute("datasource")).thenReturn(null);
 
@@ -121,4 +132,5 @@ class AuthFilterTest {
 
         verify(resp).sendRedirect("/app/login");
     }
+
 }

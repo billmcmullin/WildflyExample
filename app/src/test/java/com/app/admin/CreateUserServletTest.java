@@ -4,23 +4,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.Timeout.ThreadMode;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
-import javax.sql.DataSource;
-
 /**
  * Parasoft Jtest UTA: Test class for CreateUserServlet
  *
@@ -370,13 +373,15 @@ public class CreateUserServletTest
     }
 
     /**
-     * Parasoft Jtest UTA: Verifies doPost handles a null HttpSession (req.getSession returns null) without throwing and uses the request context path.
+     * Parasoft Jtest UTA: Verifies doPost handles a null HttpSession (req.getSession returns null) without throwing and
+     * uses the request context path.
      *
      * @author bmcmullin
      * @see CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      */
     @Test
-    public void testDoPost_nullSessionHandled() throws Throwable {
+    public void testDoPost_nullSessionHandled() throws Throwable
+    {
         // Given
         CreateUserServlet underTest = new CreateUserServlet();
 
@@ -393,13 +398,15 @@ public class CreateUserServletTest
     }
 
     /**
-     * Parasoft Jtest UTA: Verifies doPost handles an existing HttpSession whose user attribute is null, ensuring no exception and appropriate handling of the missing attribute.
+     * Parasoft Jtest UTA: Verifies doPost handles an existing HttpSession whose user attribute is null, ensuring no
+     * exception and appropriate handling of the missing attribute.
      *
      * @author bmcmullin
      * @see CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
      */
     @Test
-    public void testDoPost_sessionWithoutUserAttributeHandled() throws Throwable {
+    public void testDoPost_sessionWithoutUserAttributeHandled() throws Throwable
+    {
         // Given
         CreateUserServlet underTest = new CreateUserServlet();
 
@@ -413,6 +420,55 @@ public class CreateUserServletTest
         when(getSessionResult.getAttribute(nullable(String.class))).thenReturn(getAttributeResult);
         when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
         HttpServletResponse resp = mock(HttpServletResponse.class);
+        underTest.doPost(req, resp);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doGet(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.app.admin.CreateUserServlet#doGet(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testDoGet5() throws Throwable
+    {
+        // Given
+        CreateUserServlet underTest = new CreateUserServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        HttpSession getSessionResult = null; // UTA: configured value
+        when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        doThrow(IOException.class).when(resp).sendRedirect(nullable(String.class));
+        underTest.doGet(req, resp);
+
+    }
+
+    /**
+     * Parasoft Jtest UTA: Test for doPost(HttpServletRequest, HttpServletResponse)
+     *
+     * @see com.app.admin.CreateUserServlet#doPost(HttpServletRequest, HttpServletResponse)
+     * @author bmcmullin
+     */
+    @Test
+    @Timeout(value = 5, threadMode = ThreadMode.SEPARATE_THREAD)
+    public void testDoPost8() throws Throwable
+    {
+        // Given
+        CreateUserServlet underTest = new CreateUserServlet();
+
+        // When
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        String getContextPathResult = "getContextPathResult"; // UTA: default value
+        when(req.getContextPath()).thenReturn(getContextPathResult);
+
+        HttpSession getSessionResult = null; // UTA: configured value
+        when(req.getSession(anyBoolean())).thenReturn(getSessionResult);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        doThrow(IOException.class).when(resp).sendRedirect(nullable(String.class));
         underTest.doPost(req, resp);
 
     }
